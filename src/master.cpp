@@ -1,5 +1,7 @@
 #include "master.h"
 //Diederik is Koning
+//Noel is de programmeer koning
+//En de rest ook
 
 bool Master::init()
 {
