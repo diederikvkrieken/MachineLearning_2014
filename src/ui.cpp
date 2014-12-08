@@ -43,11 +43,37 @@ void UI::update(input *inputs)
 
 void UI::readConfigFile(string path)
 {
-  // Open and read config file
-  // Set variables in simulation
+  ifstream file;
+  string line;
+
+  file.open(path.c_str());
+  while(getline(file, line))
+  {
+    // Split the name variable from rest of the line
+    vector<string> words = splitString(line, ':');
+    for(unsigned int i=0; i < words.size(); i++)
+    {
+      printf("word[%d]: %s\n", i, words[i].c_str());
+    }
+    readParameter(words);
+  }
+  file.close();
+
+  /** Set variables in simulation **/
 
   /** skipping this now **/
   simulation->setStatus(DRAWING_WALLS);
+}
+
+void UI::readParameter(vector<string> words)
+{
+  // First word is the parameter name
+  switch(words[0])
+  {
+    case "n_people":
+      simulation->setPeopleAmount(atoi(words[1].c_str()));
+      break;
+  }
 }
 
 void UI::handleTextInput(bool *done, input *inputs)
@@ -118,7 +144,7 @@ void UI::handleWallStoring(input *inputs)
   handleTextInput(&finished, inputs);
   if(finished)
   {
-    status = STORING_WALLS;
+    simulation->setStatus(SPAWNING);
   }
 }
 

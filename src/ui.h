@@ -1,9 +1,12 @@
 #ifndef UI_H
 #define UI_H
 
-#include "functions.h"
-
 #include <SDL_ttf.h>
+
+#include <iostream>
+#include <fstream>
+
+#include "functions.h"
 
 class Master;
 class Simulation;
@@ -19,6 +22,7 @@ class UI
     void setStatus(simulation_status s) { status = s; }
   private:
     void readConfigFile(string path);
+    void readParameter(vector<string> words);
     void handleTextInput(bool *done, input *inputs);
     void handleFileSelecting(input *inputs);
     void handleWallStoring(input *inputs);

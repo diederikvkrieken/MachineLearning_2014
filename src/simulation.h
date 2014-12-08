@@ -16,6 +16,7 @@ class Simulation
     void update(int frame_time, input inputs);
 
     void setStatus(simulation_status s) { status = s; }
+    void setPeopleAmount(int n) { n_people = n; }
 
     simulation_status getStatus() { return status; }
     string getStatusText(simulation_status s) { return status_text[s]; }

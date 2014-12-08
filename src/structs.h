@@ -162,6 +162,7 @@ enum health_status
 
 enum simulation_status
 {
+  IDLE,
   MAIN_SCREEN,
   SELECTING_FILE,
   READING_CONFIG,
