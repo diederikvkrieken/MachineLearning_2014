@@ -3,7 +3,7 @@
 int main(int argc, char* args[])
 {
   Master master;
-  //Dit is een git voorbeels
+  //Dit is een git voorbeeld (Spelling check)
 
   if(master.init())
   { master.run(); }
