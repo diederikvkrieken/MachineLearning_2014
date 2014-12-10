@@ -22,3 +22,5 @@ Thumbs.db
 *.log
 *.lib
 *.sbr
+*.layout
+*.depend
