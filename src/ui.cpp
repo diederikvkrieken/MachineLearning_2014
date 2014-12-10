@@ -68,12 +68,8 @@ void UI::readConfigFile(string path)
 void UI::readParameter(vector<string> words)
 {
   // First word is the parameter name
-  switch(words[0])
-  {
-    case "n_people":
-      simulation->setPeopleAmount(atoi(words[1].c_str()));
-      break;
-  }
+  if(words[0] == "n_people")
+  { simulation->setPeopleAmount(atoi(words[1].c_str())); }
 }
 
 void UI::handleTextInput(bool *done, input *inputs)
