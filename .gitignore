@@ -24,3 +24,4 @@ Thumbs.db
 *.sbr
 *.layout
 *.depend
+gmon.out

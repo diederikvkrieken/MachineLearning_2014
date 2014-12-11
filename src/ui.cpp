@@ -23,6 +23,14 @@ void UI::init(Master* master_ptr)
   input_box_pos.x -= width / 2;
   input_box_pos.y -= height / 2;
   text_offset.set(18,50);
+  save_button.x = input_box_pos.x + 317;
+  save_button.y = input_box_pos.y + 159;
+  save_button.h = 34;
+  save_button.w = 76;
+  ignore_button.x = input_box_pos.x + 235;
+  ignore_button.y = input_box_pos.y + 159;
+  ignore_button.h = 34;
+  ignore_button.w = 76;
 
   input_text = "";
 }
@@ -47,6 +55,11 @@ void UI::readConfigFile(string path)
   string line;
 
   file.open(path.c_str());
+  if(!file.is_open())
+  {
+    fprintf(stderr, "[UI.readConfigFile] Error opening file: %s.\n", path.c_str());
+  }
+
   while(getline(file, line))
   {
     // Split the name variable from rest of the line
@@ -55,21 +68,62 @@ void UI::readConfigFile(string path)
     {
       printf("word[%d]: %s\n", i, words[i].c_str());
     }
-    readParameter(words);
+    printf("--------------\n");
+    parseParameter(words);
   }
   file.close();
-
-  /** Set variables in simulation **/
-
-  /** skipping this now **/
-  simulation->setStatus(DRAWING_WALLS);
 }
 
-void UI::readParameter(vector<string> words)
+void UI::exportWalls(string path)
+{
+  ofstream file;
+  stringstream output;
+
+  vector<pixel> walls = simulation->getWalls();
+
+  file.open(path.c_str());
+  if(!file.is_open())
+  {
+    fprintf(stderr, "[UI.exportWalls] Error opening file: %s.\n", path.c_str());
+  }
+
+  for(unsigned int i=0; i < walls.size(); i++)
+  {
+    output.str("");
+    printf("walls x: %d -- y: %d\n", walls[i].x, walls[i].y);
+    output << walls[i].x << "," << walls[i].y;
+    file.write(output.str().c_str(), output.str().size());
+    file.write(";", 1);
+  }
+  file.close();
+}
+
+void UI::parseParameter(vector<string> words)
 {
   // First word is the parameter name
   if(words[0] == "n_people")
   { simulation->setPeopleAmount(atoi(words[1].c_str())); }
+  if(words[0] == "min_radius")
+  { simulation->setMinRadius(atoi(words[1].c_str())); }
+  if(words[0] == "max_radius")
+  { simulation->setMaxRadius(atoi(words[1].c_str())); }
+  if(words[0] == "min_vision_range")
+  { simulation->setMinVision(atof(words[1].c_str())); }
+  if(words[0] == "max_vision_range")
+  { simulation->setMaxVision(atof(words[1].c_str())); }
+  if(words[0] == "walls_file")
+  {
+    if(words.size() == 1 || words[1] == "" || words[1] == " " || words[1] == "\n")
+    {
+      // Don't use a walls configuration
+      simulation->setLoadWalls(false);
+    }
+    else
+    {
+      simulation->setLoadWalls(true);
+      walls_file = words[1];
+    }
+  }
 }
 
 void UI::handleTextInput(bool *done, input *inputs)
@@ -87,7 +141,7 @@ void UI::handleTextInput(bool *done, input *inputs)
   }
   else if(inputs->key == SDL_SCANCODE_RETURN)
   {
-    // End text input
+    // End text input (Enter)
     *done = true;
     return;
   }
@@ -127,10 +181,10 @@ void UI::handleFileSelecting(input *inputs)
   handleTextInput(&finished, inputs);
   if(finished)
   {
-    status = READING_CONFIG;
-    readConfigFile("io/" + input_text);
+    readConfigFile("config/" + input_text);
     // Reset text for next time
     input_text = "";
+    simulation->setStatus(DRAWING_WALLS);
   }
 }
 
@@ -138,8 +192,18 @@ void UI::handleWallStoring(input *inputs)
 {
   bool finished = false;
   handleTextInput(&finished, inputs);
-  if(finished)
+  if(finished || clickedOnButton(save_button, inputs))
   {
+    printf("save button clicked\n");
+    exportWalls("config/walls/" + input_text);
+    input_text = "";
+    simulation->setStatus(SPAWNING);
+  }
+  else if(clickedOnButton(ignore_button, inputs))
+  {
+    printf("ignore button clicked\n");
+    // Don't save walls
+    input_text = "";
     simulation->setStatus(SPAWNING);
   }
 }
@@ -198,6 +262,16 @@ void UI::drawFileSelector(bool draw_buttons)
   SDL_RenderCopy(renderer, text_texture, NULL, &d);
   SDL_FreeSurface(text_surface);
   SDL_DestroyTexture(text_texture);
+}
+
+bool UI::clickedOnButton(SDL_Rect button, input *inputs)
+{
+  if(inputs->mouse_down != LEFT)
+  { return false; }
+  if(inputs->mouse_pos.x >= button.x && inputs->mouse_pos.x < button.x + button.w &&
+     inputs->mouse_pos.y >= button.y && inputs->mouse_pos.y < button.y + button.h)
+  { return true; }
+  return false;
 }
 
 

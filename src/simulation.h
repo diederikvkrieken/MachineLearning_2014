@@ -17,8 +17,16 @@ class Simulation
 
     void setStatus(simulation_status s) { status = s; }
     void setPeopleAmount(int n) { n_people = n; }
+    void setMinRadius(int r) { min_radius = r; }
+    void setMaxRadius(int r) { max_radius = r; }
+    void setMinSpeed(float s) { min_speed = s; }
+    void setMaxSpeed(float s) { max_speed = s; }
+    void setMinVision(float v) { min_vision = v; }
+    void setMaxVision(float v) { max_vision = v; }
+    void setLoadWalls(bool b) { load_walls = b; }
 
     simulation_status getStatus() { return status; }
+    vector<pixel> getWalls() { return wall_vertices; }
     string getStatusText(simulation_status s) { return status_text[s]; }
     SDL_Surface *getScreen() { return screen; }
 
@@ -53,11 +61,13 @@ class Simulation
     map<simulation_status, string> status_text;
 
     simulation_status status; // Run status of the simulation
+    bool load_walls;  // Whether a wall configuration file must be loaded
     int n_people;
     int max_placement_tries;  // How many times a person should be attempted to be spawned not inside somebody else
     int min_radius, max_radius; // The minimum/maximum radius of a person, anything < 5 makes the circle odd shaped
     float min_speed, max_speed; // Speed of people, in pixels/ms
-    float default_vision_range;
+    float min_vision, max_vision,
+          default_vision_range;
     float default_fov;  // The default field of view of a person, in degrees
     Uint8 vision_alpha; // The alhpa channel value of the vision cone
     rgb colour_healthy, colour_fallen, colour_dead,

@@ -28,6 +28,7 @@ void Simulation::init(Master *master_ptr)
   inside_bg_colour = makeRGB(0.8f, 0.8f, 0.8f);
 
   status = MAIN_SCREEN;
+  load_walls = false;
 
   // Set up base surface/texture
   screen = master->createEmptySurface(master->getResolution().x, master->getResolution().y);
@@ -59,7 +60,7 @@ void Simulation::fillBuilding()
       new_human.age = randInt(2, 98);
       new_human.height = randInt(40, 230);
       new_human.radius = randInt(min_radius, max_radius);
-      new_human.vision_range = randInt(25, 110);
+      new_human.vision_range = randInt(min_vision, max_vision);
       new_human.fov = default_fov;
       new_human.direction.set(randInt(-100, 100), randInt(-100, 100));
       new_human.direction = normalise(new_human.direction);
@@ -79,7 +80,6 @@ void Simulation::fillBuilding()
       tries++;
     } while(tries < max_placement_tries && collided != NULL);
 
-    /*printDim2("position: ", new_human.position);*/
     people.push_back(new_human);
 
     tries = 0;
@@ -466,7 +466,7 @@ void Simulation::placeHuman(dim2 position, dim2 direction, human_gender gender, 
   individual.height = height;
   individual.radius = radius;
   individual.status = status;
-  individual.vision_range = default_vision_range;
+  individual.vision_range = vision_range;
   individual.fov = default_fov; // Not visualized
 
   people.push_back(individual);

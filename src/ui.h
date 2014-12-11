@@ -22,17 +22,22 @@ class UI
     void setStatus(simulation_status s) { status = s; }
   private:
     void readConfigFile(string path);
-    void readParameter(vector<string> words);
+    void exportWalls(string path);
+    void parseParameter(vector<string> words);
     void handleTextInput(bool *done, input *inputs);
     void handleFileSelecting(input *inputs);
     void handleWallStoring(input *inputs);
     void drawFileSelector(bool draw_buttons);
 
+    bool clickedOnButton(SDL_Rect button, input *inputs);
+
     string input_text;
     dim2 input_box_pos,
          text_offset;
+    SDL_Rect save_button, ignore_button;
 
     simulation_status status;
+    string walls_file; // Which walls configuration file should be read
 
     SDL_Texture *box_surface,
                 *text_texture;
