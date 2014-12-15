@@ -25,3 +25,4 @@ Thumbs.db
 *.layout
 *.depend
 gmon.out
+panic_simulation.cbp
