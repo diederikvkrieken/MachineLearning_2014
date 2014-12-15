@@ -74,6 +74,40 @@ void UI::readConfigFile(string path)
   file.close();
 }
 
+void UI::readWalls(string path)
+{
+  printf("start loading walls\n");
+  ifstream file;
+  string line;
+  vector<pixel> vertices;
+
+  file.open(path.c_str());
+  if(!file.is_open())
+  {
+    fprintf(stderr, "[UI.readWalls] Error opening file: %s.\n", path.c_str());
+  }
+
+  while(getline(file, line))
+  {
+    // Split line up into (x,y) coordinates
+    vector<string> points = splitString(line, ';');
+    for(unsigned int i=0; i < points.size(); i++)
+    {
+      pixel p;
+      // Split coordinate up into x and y
+      vector<string> point = splitString(points[i], ',');
+      int x = atoi(point[0].c_str());
+      int y = atoi(point[1].c_str());
+      p.set(x,y);
+      vertices.push_back(p);
+    }
+  }
+  file.close();
+
+  simulation->setWalls(vertices);
+  printf("stopped loading walls\n");
+}
+
 void UI::exportWalls(string path)
 {
   ofstream file;
@@ -111,6 +145,14 @@ void UI::parseParameter(vector<string> words)
   { simulation->setMinVision(atof(words[1].c_str())); }
   if(words[0] == "max_vision_range")
   { simulation->setMaxVision(atof(words[1].c_str())); }
+  if(words[0] == "min_height")
+  { simulation->setMinHeight(atoi(words[1].c_str())); }
+  if(words[0] == "max_height")
+  { simulation->setMaxHeight(atoi(words[1].c_str())); }
+  if(words[0] == "min_age")
+  { simulation->setMinAge(atoi(words[1].c_str())); }
+  if(words[0] == "max_age")
+  { simulation->setMaxAge(atoi(words[1].c_str())); }
   if(words[0] == "walls_file")
   {
     if(words.size() == 1 || words[1] == "" || words[1] == " " || words[1] == "\n")
@@ -121,6 +163,7 @@ void UI::parseParameter(vector<string> words)
     else
     {
       simulation->setLoadWalls(true);
+      readWalls("config/walls/" + words[1]);
       walls_file = words[1];
     }
   }

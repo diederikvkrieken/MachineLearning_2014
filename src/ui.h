@@ -22,6 +22,7 @@ class UI
     void setStatus(simulation_status s) { status = s; }
   private:
     void readConfigFile(string path);
+    void readWalls(string path);
     void exportWalls(string path);
     void parseParameter(vector<string> words);
     void handleTextInput(bool *done, input *inputs);

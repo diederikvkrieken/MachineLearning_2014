@@ -11,13 +11,20 @@ void Simulation::init(Master *master_ptr)
 
   min_radius = 4;
   max_radius = 12;
+  min_age = 2;
+  max_age = 98;
+  min_height = 160;
+  max_height = 180;
   min_speed = 0.001f;
   max_speed = 0.01f;
   n_people = 100;
   max_placement_tries = 1000;
   default_vision_range = 60.0f;
+  min_vision = default_vision_range;
+  max_vision = default_vision_range;
   default_fov = 90.0f;
   vision_alpha = 50;
+  exit_location.set(0,0);
 
   colour_healthy = makeRGB(GREEN);
   colour_fallen = makeRGB(BLUE);
@@ -57,8 +64,8 @@ void Simulation::fillBuilding()
       new_human.ID = people.size();
       new_human.gender = MALE;
       new_human.status = HEALTHY;
-      new_human.age = randInt(2, 98);
-      new_human.height = randInt(40, 230);
+      new_human.age = randInt(min_age, max_age);
+      new_human.height = randInt(min_height, max_height);
       new_human.radius = randInt(min_radius, max_radius);
       new_human.vision_range = randInt(min_vision, max_vision);
       new_human.fov = default_fov;
@@ -98,6 +105,13 @@ void Simulation::update(int frame_time, input inputs)
   }
   else if(status == DRAWING_WALLS)
   {
+    if(load_walls)
+    {
+      status = SPAWNING;
+      updateWallSurface();
+      fillWallBackground();
+      return;
+    }
     createWalls(&inputs);
   }
   else if(status == SPAWNING)
@@ -196,24 +210,16 @@ void Simulation::createWalls(input *inputs)
     if(wall_vertices.size() > 0)
     { wall_vertices.pop_back(); } // Remove last point
   }
-  editWallSurface();
-
-  if(status != DRAWING_WALLS)
-  {
-    dim2 point;
-    pixel start;
-    // Find pixel inside polygon
-    do
-    {
-      point.set(randInt(0, master->getResolution().x - 1),
-                randInt(0, master->getResolution().y - 1));
-    } while(!pointInPolygon(point, convertPixelToDim2(wall_vertices)));
-    start.set(point.x, point.y);
-    floodFillInside(inside_bg_colour, makeRGB(WHITE), start);
-  }
+  updateWallSurface();
+  fillWallBackground();
 }
 
-void Simulation::editWallSurface()
+dim2 Simulation::determineExit()
+{
+
+}
+
+void Simulation::updateWallSurface()
 {
   // Reset background
   SDL_FillRect(walls, NULL, SDL_MapRGBA(screen->format, 255,255,255, 255));
@@ -253,6 +259,23 @@ void Simulation::editWallSurface()
       }
       colourPixel(walls, current.x, current.y, exit_colour, 1.0f);
     }
+  }
+}
+
+void Simulation::fillWallBackground()
+{
+  if(status != DRAWING_WALLS)
+  {
+    dim2 point;
+    pixel start;
+    // Find pixel inside polygon
+    do
+    {
+      point.set(randInt(0, master->getResolution().x - 1),
+                randInt(0, master->getResolution().y - 1));
+    } while(!pointInPolygon(point, convertPixelToDim2(wall_vertices)));
+    start.set(point.x, point.y);
+    floodFillInside(inside_bg_colour, makeRGB(WHITE), start);
   }
 }
 

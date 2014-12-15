@@ -16,6 +16,8 @@ class Simulation
     void update(int frame_time, input inputs);
 
     void setStatus(simulation_status s) { status = s; }
+    void setWalls(vector<pixel> vertices) { wall_vertices = vertices; }
+    void setLoadWalls(bool b) { load_walls = b; }
     void setPeopleAmount(int n) { n_people = n; }
     void setMinRadius(int r) { min_radius = r; }
     void setMaxRadius(int r) { max_radius = r; }
@@ -23,7 +25,10 @@ class Simulation
     void setMaxSpeed(float s) { max_speed = s; }
     void setMinVision(float v) { min_vision = v; }
     void setMaxVision(float v) { max_vision = v; }
-    void setLoadWalls(bool b) { load_walls = b; }
+    void setMaxHeight(int h) { max_height = h; }
+    void setMinHeight(int h) { min_height = h; }
+    void setMinAge(int a) { min_age = a; }
+    void setMaxAge(int a) { max_age = a; }
 
     simulation_status getStatus() { return status; }
     vector<pixel> getWalls() { return wall_vertices; }
@@ -36,7 +41,9 @@ class Simulation
     void handleInput(int frame_time, input inputs);
     void moveHumans(int frame_time);
     void createWalls(input *inputs);
-    void editWallSurface();
+    dim2 determineExit();
+    void updateWallSurface();
+    void fillWallBackground();
     void floodFillInside(rgb target, rgb overwrite, pixel start);
     void setupIcons();
     void setupVisionCone();
@@ -57,6 +64,7 @@ class Simulation
 
     vector<human> people;
     vector<pixel> wall_vertices;
+    dim2 exit_location;
 
     map<simulation_status, string> status_text;
 
@@ -65,6 +73,8 @@ class Simulation
     int n_people;
     int max_placement_tries;  // How many times a person should be attempted to be spawned not inside somebody else
     int min_radius, max_radius; // The minimum/maximum radius of a person, anything < 5 makes the circle odd shaped
+    int min_age, max_age;
+    int min_height, max_height;
     float min_speed, max_speed; // Speed of people, in pixels/ms
     float min_vision, max_vision,
           default_vision_range;
