@@ -116,6 +116,7 @@ float toDegrees(float rad);
 float toRadians(float deg);
 float radiansPositiveOnly(float rad);
 vector<dim2> convertPixelToDim2(vector<pixel> a);
+dim2 convertPixelToDim2(pixel a);
 
 bool pointInPolygon(dim2 point, vector<dim2> polygon);
 

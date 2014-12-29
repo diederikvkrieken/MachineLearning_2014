@@ -193,14 +193,20 @@ void UI::handleTextInput(bool *done, input *inputs)
     // Space
     text = text + " ";
   }
+  else if((inputs->key_state[SDL_SCANCODE_LSHIFT] || inputs->key_state[SDL_SCANCODE_RSHIFT]) &&
+          (inputs->key == SDL_SCANCODE_MINUS || inputs->key == SDL_SCANCODE_KP_MINUS))
+  {
+    // Underscore
+    text = text + "_";
+  }
   else if((inputs->key_state[SDL_SCANCODE_LCTRL] || inputs->key_state[SDL_SCANCODE_RCTRL]) &&
-     inputs->key == SDL_SCANCODE_C)
+          inputs->key == SDL_SCANCODE_C)
   {
     // CTRL + C
     SDL_SetClipboardText(text.c_str());
   }
   else if((inputs->key_state[SDL_SCANCODE_LCTRL] || inputs->key_state[SDL_SCANCODE_RCTRL]) &&
-     inputs->key == SDL_SCANCODE_V)
+          inputs->key == SDL_SCANCODE_V)
   {
     // CTRL + V
     string copied(SDL_GetClipboardText());

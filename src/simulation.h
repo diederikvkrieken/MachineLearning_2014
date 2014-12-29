@@ -30,6 +30,7 @@ class Simulation
     void setMinAge(int a) { min_age = a; }
     void setMaxAge(int a) { max_age = a; }
 
+    visible_information applyPerception(human *h);
     simulation_status getStatus() { return status; }
     vector<pixel> getWalls() { return wall_vertices; }
     string getStatusText(simulation_status s) { return status_text[s]; }
@@ -41,7 +42,6 @@ class Simulation
     void handleInput(int frame_time, input inputs);
     void moveHumans(int frame_time);
     void createWalls(input *inputs);
-    dim2 determineExit();
     void updateWallSurface();
     void fillWallBackground();
     void floodFillInside(rgb target, rgb overwrite, pixel start);
@@ -57,6 +57,8 @@ class Simulation
 
     human *humanCollision(human *target, float *distance);
     bool hitsWall(human *target);
+    vector<human *> visibleHumans(human *h);
+    dim2 determineExit();
 
     SDL_Surface *screen, *walls;
     SDL_Texture *vision_cone;

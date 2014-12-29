@@ -700,6 +700,13 @@ vector<dim2> convertPixelToDim2(vector<pixel> a)
   return result;
 }
 
+dim2 convertPixelToDim2(pixel a)
+{
+  dim2 result;
+  result.set(a.x, a.y);
+  return result;
+}
+
 bool pointInPolygon(dim2 point, vector<dim2> polygon)
 {
   int j;

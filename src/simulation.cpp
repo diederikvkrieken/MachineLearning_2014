@@ -69,17 +69,20 @@ void Simulation::fillBuilding()
       new_human.radius = randInt(min_radius, max_radius);
       new_human.vision_range = randInt(min_vision, max_vision);
       new_human.fov = default_fov;
-      new_human.direction.set(randInt(-100, 100), randInt(-100, 100));
-      new_human.direction = normalise(new_human.direction);
-      // Speed
-      float speed = min_speed + (randInt(0, 100) / 100.0f) * (max_speed - min_speed);
-      new_human.direction = new_human.direction * speed;
+      /*new_human.direction.set(randInt(-100, 100), randInt(-100, 100));
+      new_human.direction = normalise(new_human.direction);*/
       // Find a position in the building
       do
       {
         new_human.position.set(randInt(0 + new_human.radius, master->getResolution().x - 1 - new_human.radius),
                                randInt(0 + new_human.radius, master->getResolution().y - 1 - new_human.radius));
       } while(!pointInPolygon(new_human.position, walls_vector) || hitsWall(&new_human));
+
+      // Direction towards the exit
+      new_human.direction = normalise(exit_location - new_human.position);
+      // Speed
+      float speed = min_speed + (randInt(0, 100) / 100.0f) * (max_speed - min_speed);
+      new_human.direction = new_human.direction * speed;
 
       float distance;
       collided = humanCollision(&new_human, &distance);
@@ -110,6 +113,7 @@ void Simulation::update(int frame_time, input inputs)
       status = SPAWNING;
       updateWallSurface();
       fillWallBackground();
+      exit_location = determineExit();
       return;
     }
     createWalls(&inputs);
@@ -140,6 +144,16 @@ void Simulation::update(int frame_time, input inputs)
 
   // Draw the (scaled and rotated) vision cones
   drawVision();
+}
+
+visible_information Simulation::applyPerception(human *h)
+{
+  visible_information view;
+
+  vector<human *> visible_humans = visibleHumans(h);
+  /** TODO: fill in view with information **/
+
+  return view;
 }
 
 /*void Simulation::testSim()
@@ -196,6 +210,9 @@ void Simulation::createWalls(input *inputs)
       if(computeDistance(first_point, inputs->mouse_pos) < 6.0f)
       {
         // Walls form an enclosed area
+        // Determine exit
+        exit_location = determineExit();
+        // Save walls
         status = STORING_WALLS;
         ui->setStatus(STORING_WALLS);
       }
@@ -212,11 +229,6 @@ void Simulation::createWalls(input *inputs)
   }
   updateWallSurface();
   fillWallBackground();
-}
-
-dim2 Simulation::determineExit()
-{
-
 }
 
 void Simulation::updateWallSurface()
@@ -526,6 +538,44 @@ bool Simulation::hitsWall(human *target)
     { return true; }
   }
   return false;
+}
+
+/** Returns the exit point, which is represented by the center of the line of the the last wall section **/
+dim2 Simulation::determineExit()
+{
+  dim2 start_point, end_point;
+
+  start_point = convertPixelToDim2(wall_vertices[wall_vertices.size() - 1]);
+  end_point = convertPixelToDim2(wall_vertices[0]);
+  dim2 direction = end_point - start_point;
+  return start_point + direction * 0.5f;
+}
+
+vector<human *> Simulation::visibleHumans(human *h)
+{
+  vector<human *> visible;
+
+  float facing_angle = toDegrees(radiansPositiveOnly(computeAngle(h->direction, makeDim2(0.0f, 0.0f))));
+
+  for(unsigned int i=0; i < people.size(); i++)
+  {
+    human *compare = &people[i];
+
+    if(compare == h)
+    { continue; } // Don't check against self
+
+    float angle = toDegrees(radiansPositiveOnly(computeAngle(compare->position, h->position)));
+    float view_angle_difference = angleDifference(angle, facing_angle);
+    if(view_angle_difference > h->fov * 0.5f)
+    { continue; } // This human is not in the field of view
+
+    float distance = computeDistance(compare->position, h->position);
+    if(distance > h->vision_range)
+    { continue; } // This human is out of range
+
+    visible.push_back(compare);
+  }
+  return visible;
 }
 
 

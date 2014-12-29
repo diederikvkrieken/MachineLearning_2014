@@ -1,0 +1,12 @@
+walls_file:
+n_people:100
+min_radius:4
+max_radius:10
+min_vision_range:35
+max_vision_range:150
+min_speed:0.001
+max_speed:0.01
+min_height:40
+max_height:230
+min_age:2
+max_age:98
