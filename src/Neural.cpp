@@ -13,17 +13,18 @@ void NN::initializeNN()
   for(int i=0; i < n_hidden; i++)
   {
     // Initialise hidden nodes values
-    nHL[i] = randInt(0, 100) / 100.0;
+    nHL[i] = 0;
 
     // Initialise hidden nodes bias
-    bHL[i] = randInt(0, 100) / 100.0;
+    bHL[i] = 0;
 
     // Initialise hidden nodes weights
     for(int j=0; j < n_input; j++)
     {
       wHL[i][j] = randInt(0, 100) / 100.0;
+
       // Initialise input nodes values
-      nIL[j] = randInt(0, 100) / 100.0;
+      nIL[j] = 0;
     }
 
 
@@ -32,9 +33,14 @@ void NN::initializeNN()
     {
       wOL[j][i] = randInt(0, 100) / 100.0;
       // Initialise output nodes bias
-      bOL[j] = randInt(0, 100) / 100.0;
+      bOL[j] = 0;
       // Initialise output nodes value
-      nOL[j] = randInt(0, 100) / 100.0;
+      nOL[j] = 0;
     }
   }
+}
+
+void NN::trainNN()
+{
+
 }
