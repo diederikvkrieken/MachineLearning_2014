@@ -17,10 +17,16 @@ void NN::initializeNN()
     {
       wHL[i][j] = randInt(0, 100) / 100.0;
     }
+
+    // Initialise hidden nodes bias
+    bHL[i] = randInt(0, 100) / 100.0;
+
     // Initialise output nodes
     for(int j=0; j < n_output; j++)
     {
-      wHL[j][i] = randInt(0, 100) / 100.0;
+      wOL[j][i] = randInt(0, 100) / 100.0;
+      // Initialise output nodes bias
+      bOL[j] = randInt(0, 100) / 100.0;
     }
   }
 }
