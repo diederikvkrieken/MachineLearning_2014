@@ -186,6 +186,7 @@ struct human
   int radius; // Size of person, in pixels
   float vision_range; // How far someone can see ahead
   float fov;  // Field of view
+  float panic; // Panic number between 0 (low panic) and 1 (high panic)
   health_status status;
 };
 
@@ -205,7 +206,7 @@ struct visible_information
   dim2 var_direction;
   int n_walls;
   float closest_wall_distance;
-  /*float exit_distance;*/
+  float exit_distance;
 };
 
 struct circle_surface

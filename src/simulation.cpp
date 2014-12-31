@@ -23,6 +23,7 @@ void Simulation::init(Master *master_ptr)
   min_vision = default_vision_range;
   max_vision = default_vision_range;
   default_fov = 90.0f;
+  default_panic = 0.2f;
   vision_alpha = 50;
   exit_location.set(0,0);
 
@@ -64,6 +65,7 @@ void Simulation::fillBuilding()
       new_human.ID = people.size();
       new_human.gender = MALE;
       new_human.status = HEALTHY;
+      new_human.panic = default_panic;
       new_human.age = randInt(min_age, max_age);
       new_human.height = randInt(min_height, max_height);
       new_human.radius = randInt(min_radius, max_radius);
@@ -151,7 +153,35 @@ visible_information Simulation::applyPerception(human *h)
   visible_information view;
 
   vector<human *> visible_humans = visibleHumans(h);
-  /** TODO: fill in view with information **/
+
+  view.n_people = visible_humans.size();
+  getAgeMeanVariance(visible_humans, &view.mean_age, &view.var_age);
+  getHeightMeanVariance(visible_humans, &view.mean_height, &view.var_height);
+  getRadiusMeanVariance(visible_humans, &view.mean_radius, &view.var_radius);
+  getPanicMeanVariance(visible_humans, &view.mean_panic, &view.var_panic);
+  getDirectionMeanVariance(visible_humans, &view.mean_direction, &view.var_direction);
+  view.exit_distance = computeDistance(exit_location, h->position); // Straight-line distance
+
+  view.n_walls = 0;
+  view.closest_wall_distance = 500000.0f;  // No wall in sight
+  float facing_angle = toDegrees(radiansPositiveOnly(computeAngle(h->direction, makeDim2(0.0f, 0.0f))));
+  // Check walls
+  for(unsigned int i=0; i < wall_vertices.size(); i++)
+  {
+    dim2 current = convertPixelToDim2(wall_vertices[i]);
+    pixel n = (i < wall_vertices.size() - 1) ? wall_vertices[i+1] : wall_vertices[0];
+    dim2 next = convertPixelToDim2(n);
+
+    // See if the person can see this wall section
+    dim2 projected_point = projectPointOntoLineSegment(h->position, current, next);
+    if(detectCollisionPointCone(projected_point, h->position, h->vision_range, h->fov, facing_angle))
+    {
+      view.n_walls++;
+      float wall_distance = computeDistance(projected_point, h->position);
+      if(wall_distance < view.closest_wall_distance)
+      { view.closest_wall_distance = wall_distance; }
+    }
+  }
 
   return view;
 }
@@ -528,27 +558,16 @@ bool Simulation::hitsWall(human *target)
 
   w1.set(wall_vertices[wall_vertices.size()-1].x, wall_vertices[wall_vertices.size()-1].y);
   w2.set(wall_vertices[0].x, wall_vertices[0].y);
-  if(distancePointToLine(target->position, w1, w2) < (float)target->radius)
+  if(distancePointToLineSegment(target->position, w1, w2) < (float)target->radius)
   { return true; }
   for(unsigned int i=0; i < wall_vertices.size() - 1; i++)
   {
     w1.set(wall_vertices[i].x, wall_vertices[i].y);
     w2.set(wall_vertices[i+1].x, wall_vertices[i+1].y);
-    if(distancePointToLine(target->position, w1, w2) < (float)target->radius)
+    if(distancePointToLineSegment(target->position, w1, w2) < (float)target->radius)
     { return true; }
   }
   return false;
-}
-
-/** Returns the exit point, which is represented by the center of the line of the the last wall section **/
-dim2 Simulation::determineExit()
-{
-  dim2 start_point, end_point;
-
-  start_point = convertPixelToDim2(wall_vertices[wall_vertices.size() - 1]);
-  end_point = convertPixelToDim2(wall_vertices[0]);
-  dim2 direction = end_point - start_point;
-  return start_point + direction * 0.5f;
 }
 
 vector<human *> Simulation::visibleHumans(human *h)
@@ -564,18 +583,83 @@ vector<human *> Simulation::visibleHumans(human *h)
     if(compare == h)
     { continue; } // Don't check against self
 
-    float angle = toDegrees(radiansPositiveOnly(computeAngle(compare->position, h->position)));
-    float view_angle_difference = angleDifference(angle, facing_angle);
-    if(view_angle_difference > h->fov * 0.5f)
-    { continue; } // This human is not in the field of view
-
-    float distance = computeDistance(compare->position, h->position);
-    if(distance > h->vision_range)
-    { continue; } // This human is out of range
+    if(!detectCollisionPointCone(compare->position, h->position, h->vision_range, h->fov, facing_angle))
+    { continue; } // Human is not in the field of view
 
     visible.push_back(compare);
   }
   return visible;
+}
+
+void Simulation::getAgeMeanVariance(vector<human *> humans, float *mean, float *variance)
+{
+  vector<float> numbers;
+  for(unsigned int i=0; i < humans.size(); i++)
+  {
+    numbers.push_back(humans[i]->age);
+  }
+  *mean = calculateMean(numbers);
+  *variance = calculateVariance(numbers, *mean);
+}
+
+void Simulation::getRadiusMeanVariance(vector<human *> humans, float *mean, float *variance)
+{
+  vector<float> numbers;
+  for(unsigned int i=0; i < humans.size(); i++)
+  {
+    numbers.push_back(humans[i]->radius);
+  }
+  *mean = calculateMean(numbers);
+  *variance = calculateVariance(numbers, *mean);
+}
+
+void Simulation::getHeightMeanVariance(vector<human *> humans, float *mean, float *variance)
+{
+  vector<float> numbers;
+  for(unsigned int i=0; i < humans.size(); i++)
+  {
+    numbers.push_back(humans[i]->height);
+  }
+  *mean = calculateMean(numbers);
+  *variance = calculateVariance(numbers, *mean);
+}
+
+void Simulation::getPanicMeanVariance(vector<human *> humans, float *mean, float *variance)
+{
+  vector<float> numbers;
+  for(unsigned int i=0; i < humans.size(); i++)
+  {
+    numbers.push_back(humans[i]->panic);
+  }
+  *mean = calculateMean(numbers);
+  *variance = calculateVariance(numbers, *mean);
+}
+
+void Simulation::getDirectionMeanVariance(vector<human *> humans, dim2 *mean, dim2 *variance)
+{
+  vector<float> numbers_x;
+  vector<float> numbers_y;
+  for(unsigned int i=0; i < humans.size(); i++)
+  {
+    numbers_x.push_back(humans[i]->direction.x);
+    numbers_y.push_back(humans[i]->direction.y);
+  }
+  (*mean).x = calculateMean(numbers_x);
+  (*mean).y = calculateMean(numbers_y);
+  (*variance).x = calculateVariance(numbers_x, (*mean).x);
+  (*variance).y = calculateVariance(numbers_y, (*mean).y);
+}
+
+
+/** Returns the exit point, which is represented by the center of the line of the the last wall section **/
+dim2 Simulation::determineExit()
+{
+  dim2 start_point, end_point;
+
+  start_point = convertPixelToDim2(wall_vertices[wall_vertices.size() - 1]);
+  end_point = convertPixelToDim2(wall_vertices[0]);
+  dim2 direction = end_point - start_point;
+  return start_point + direction * 0.5f;
 }
 
 

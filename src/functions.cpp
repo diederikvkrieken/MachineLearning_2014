@@ -631,6 +631,20 @@ float detectCollisionCircle(dim2 c1, float r1, dim2 c2, float r2)
   return computeDistance(c1, c2) - (r1 + r2);
 }
 
+/** Expects angles to be in degrees in the range [0,360] **/
+bool detectCollisionPointCone(dim2 point, dim2 pos_cone, float range, float degrees, float facing_angle)
+{
+  float angle = toDegrees(radiansPositiveOnly(computeAngle(point, pos_cone)));
+  float angle_difference = angleDifference(angle, facing_angle);
+  if(angle_difference > degrees * 0.5f)
+  { return false; } // Point is not in the field of view
+
+  float distance = computeDistance(point, pos_cone);
+  if(distance > range)
+  { return false; } // Point is out of range
+  return true;
+}
+
 float computeDistance(dim2 target, dim2 center)
 {
   dim2 delta = target - center;
@@ -650,6 +664,45 @@ float distancePointToLine(dim2 target, dim2 a, dim2 b)
   dim3 AB = makeDim3(ab.x, ab.y, 0);
   dim3 AC = makeDim3(ac.x, ac.y, 0);
   return length(cross(AB, AC)) / length(AB);
+}
+
+/** http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment **/
+float distancePointToLineSegment(dim2 p, dim2 v, dim2 w)
+{
+  // Return minimum distance between line segment vw and point p
+  float l = length(w - v);
+  float l2 = l*l; // i.e. |w-v|^2 -  avoid a sqrt
+  if(l2 == 0.0)
+  { return computeDistance(p, v); }   // v == w case
+
+  // Consider the line extending the segment, parameterized as v + t (w - v).
+  // We find projection of point p onto the line.
+  // It falls where t = [(p-v) . (w-v)] / |w-v|^2
+  float t = dot(p - v, w - v) / l2;
+  if(t < 0.0)
+  { return computeDistance(p, v); } // Beyond the 'v' end of the segment
+  else if (t > 1.0)
+  { return computeDistance(p, w); } // Beyond the 'w' end of the segment
+  dim2 projection = v + t * (w - v);  // Projection falls on the segment
+  return computeDistance(p, projection);
+}
+
+dim2 projectPointOntoLineSegment(dim2 p, dim2 v, dim2 w)
+{
+  float l = length(w - v);
+  float l2 = l*l; // i.e. |w-v|^2 -  avoid a sqrt
+  if(l2 == 0.0)
+  { return v; }   // v == w case
+
+  // Consider the line extending the segment, parameterized as v + t (w - v).
+  // We find projection of point p onto the line.
+  // It falls where t = [(p-v) . (w-v)] / |w-v|^2
+  float t = dot(p - v, w - v) / l2;
+  if(t < 0.0)
+  { return v; } // Beyond the 'v' end of the segment
+  else if (t > 1.0)
+  { return w; } // Beyond the 'w' end of the segment
+  return v + t * (w - v);  // Projection falls on the segment;
 }
 
 /** Expects an angle in degrees in the range [0,360] **/
@@ -730,6 +783,27 @@ bool pointInPolygon(dim2 point, vector<dim2> polygon)
   }
 
   return oddNodes;
+}
+
+float calculateMean(vector<float> a)
+{
+  float mean = 0.0f;
+  for(unsigned int i=0; i < a.size(); i++)
+  {
+    mean += a[i];
+  }
+  return mean / a.size();
+}
+
+/** http://www.wikihow.com/Calculate-Variance **/
+float calculateVariance(vector<float> a, float mean)
+{
+  float var = 0;
+  for(unsigned int i=0; i < a.size(); i++)
+  {
+    var += sqrtf(mean - a[i]);
+  }
+  return var / (a.size() - 1);
 }
 
 vector<string> splitString(string s, char token)
