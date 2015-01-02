@@ -8,7 +8,8 @@ class NN
   public:
     void init();
   private:
-    void initializeNN();
+    void initializeNN(),
+    void trainNN();
 
     vector< vector<float> > wHL,
                             wOL;
