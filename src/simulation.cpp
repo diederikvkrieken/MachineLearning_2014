@@ -37,6 +37,7 @@ void Simulation::init(Master *master_ptr)
 
   status = MAIN_SCREEN;
   load_walls = false;
+  single_cone = false;
 
   // Set up base surface/texture
   screen = master->createEmptySurface(master->getResolution().x, master->getResolution().y);
@@ -96,6 +97,10 @@ void Simulation::fillBuilding()
 
     tries = 0;
   }
+
+  // Pick a focus human
+  int idx = randInt(0, people.size() - 1);
+  focus_human = &people[idx];
 }
 
 void Simulation::update(int frame_time, input inputs)
@@ -500,6 +505,9 @@ void Simulation::drawVision()
   for(unsigned int i=0; i < people.size(); i++)
   {
     human *indiv = &people[i];
+
+    if(single_cone && indiv != focus_human)
+    { continue; } // Only draw focus human's cone
 
     if(indiv->status != HEALTHY)
     { continue; } // Don't draw vision cone

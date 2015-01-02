@@ -18,6 +18,7 @@ class Simulation
     void setStatus(simulation_status s) { status = s; }
     void setWalls(vector<pixel> vertices) { wall_vertices = vertices; }
     void setLoadWalls(bool b) { load_walls = b; }
+    void setConeDrawing(bool setting) { single_cone = setting; }
     void setPeopleAmount(int n) { n_people = n; }
     void setMinRadius(int r) { min_radius = r; }
     void setMaxRadius(int r) { max_radius = r; }
@@ -69,6 +70,7 @@ class Simulation
     SDL_Texture *vision_cone;
     vector<circle_surface> icons;
 
+    human *focus_human;
     vector<human> people;
     vector<pixel> wall_vertices;
     dim2 exit_location;
@@ -77,6 +79,7 @@ class Simulation
 
     simulation_status status; // Run status of the simulation
     bool load_walls;  // Whether a wall configuration file must be loaded
+    bool single_cone; // Whether just the vision cone of the focused human should be drawn
     int n_people;
     int max_placement_tries;  // How many times a person should be attempted to be spawned not inside somebody else
     int min_radius, max_radius; // The minimum/maximum radius of a person, anything < 5 makes the circle odd shaped

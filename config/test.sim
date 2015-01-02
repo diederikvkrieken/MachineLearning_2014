@@ -1,4 +1,5 @@
 walls_file:square.wall
+single_cone:1
 n_people:100
 min_radius:4
 max_radius:10

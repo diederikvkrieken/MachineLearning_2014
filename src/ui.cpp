@@ -167,6 +167,13 @@ void UI::parseParameter(vector<string> words)
       walls_file = words[1];
     }
   }
+  if(words[0] == "single_cone")
+  {
+    if(atoi(words[1].c_str()) == 1)
+    { simulation->setConeDrawing(true); }
+    else
+    { simulation->setConeDrawing(false); }
+  }
 }
 
 void UI::handleTextInput(bool *done, input *inputs)
