@@ -57,7 +57,7 @@ class Simulation
     void placeHuman(dim2 position, dim2 direction, human_gender gender, int age, int height, int radius, float vision_range, health_status status); /** Unused **/
 
     human *humanCollision(human *target, float *distance);
-    bool hitsWall(human *target);
+    bool hitsWall(human *target, bool include_exit);
     vector<human *> visibleHumans(human *h);
     void getAgeMeanVariance(vector<human *> humans, float *mean, float *variance);
     void getRadiusMeanVariance(vector<human *> humans, float *mean, float *variance);

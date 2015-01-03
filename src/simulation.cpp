@@ -79,7 +79,7 @@ void Simulation::fillBuilding()
       {
         new_human.position.set(randInt(0 + new_human.radius, master->getResolution().x - 1 - new_human.radius),
                                randInt(0 + new_human.radius, master->getResolution().y - 1 - new_human.radius));
-      } while(!pointInPolygon(new_human.position, walls_vector) || hitsWall(&new_human));
+      } while(!pointInPolygon(new_human.position, walls_vector) || hitsWall(&new_human, true));
 
       // Direction towards the exit
       new_human.direction = normalise(exit_location - new_human.position);
@@ -225,7 +225,7 @@ void Simulation::moveHumans(int frame_time)
 
     // Detect collisions
     float distance; /** Use this to simulate pushing **/
-    if(humanCollision(h, &distance) != NULL || hitsWall(h))
+    if(humanCollision(h, &distance) != NULL || hitsWall(h, false))
     {
       /*h->position = h->previous_position;*/
       continue;
@@ -566,14 +566,18 @@ human *Simulation::humanCollision(human *target, float *distance)
   return NULL;
 }
 
-bool Simulation::hitsWall(human *target)
+bool Simulation::hitsWall(human *target, bool include_exit)
 {
   dim2 w1, w2;  // Wall points
 
-  w1.set(wall_vertices[wall_vertices.size()-1].x, wall_vertices[wall_vertices.size()-1].y);
-  w2.set(wall_vertices[0].x, wall_vertices[0].y);
-  if(distancePointToLineSegment(target->position, w1, w2) < (float)target->radius)
-  { return true; }
+  if(include_exit)
+  {
+    w1.set(wall_vertices[wall_vertices.size()-1].x, wall_vertices[wall_vertices.size()-1].y);
+    w2.set(wall_vertices[0].x, wall_vertices[0].y);
+    if(distancePointToLineSegment(target->position, w1, w2) < (float)target->radius)
+    { return true; }
+  }
+
   for(unsigned int i=0; i < wall_vertices.size() - 1; i++)
   {
     w1.set(wall_vertices[i].x, wall_vertices[i].y);
