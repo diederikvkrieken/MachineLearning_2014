@@ -9,7 +9,7 @@ bool Master::init()
   srand(time(NULL));
 
   // Maximum framerate
-  max_fps = 1000;
+  max_fps = 120;
 
   // Set resolution
   resolution.set(800,800);
@@ -45,7 +45,7 @@ bool Master::init()
     return false;
   }
   // Create renderer
-  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_PRESENTVSYNC);
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
   if(renderer == NULL)
   {
     fprintf(stderr, "[Master.init] Failed to create renderer. Message: %s\n", SDL_GetError());
@@ -101,8 +101,11 @@ void Master::run()
   screen = SDL_CreateTextureFromSurface(renderer, simulation.getScreen());
 
   running = true;
-  /** debug **/
-  bool spawned = false;
+
+  //debug
+  /*bool test = detectCollisionPointCone(makeDim2(50,0), makeDim2(45,10), 30, 90, 90);
+  if(test)
+  { printf("success!\n"); }*/
 
   while(running)
   {
@@ -116,12 +119,6 @@ void Master::run()
     resetInputs();
     handleInput();
 
-    /*if(!spawned && simulation.getStatus() != DRAWING_WALLS)
-    {
-      simulation.testSim();
-      spawned = true;
-    }*/
-
     SDL_SetRenderTarget(renderer, NULL);
     // Set background color
     SDL_SetRenderDrawColor(renderer, 255,255,255, 255);
@@ -133,7 +130,7 @@ void Master::run()
     // Update screen
     SDL_RenderPresent(renderer);
 
-    /*wait(SDL_GetTicks() - frametime);*/
+    wait(SDL_GetTicks() - frametime);
   }
 
   quit();

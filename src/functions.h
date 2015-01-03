@@ -107,6 +107,7 @@ float percentToPortion(float percent);
 
 float detectCollisionCircle(dim2 c1, float r1, dim2 c2, float r2);
 bool detectCollisionPointCone(dim2 point, dim2 pos_cone, float range, float degrees, float facing_angle);
+bool detectCollisionLineCone(dim2 A, dim2 B, int precision, dim2 pos_cone, float range, float degrees, float facing_angle, float *closest_distance);
 
 float computeAngle(dim2 target, dim2 center);
 float computeDistance(dim2 target, dim2 center);

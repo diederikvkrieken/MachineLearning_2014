@@ -635,7 +635,9 @@ float detectCollisionCircle(dim2 c1, float r1, dim2 c2, float r2)
 bool detectCollisionPointCone(dim2 point, dim2 pos_cone, float range, float degrees, float facing_angle)
 {
   float angle = toDegrees(radiansPositiveOnly(computeAngle(point, pos_cone)));
+  /*printf("angle: %.2f\n", angle);*/
   float angle_difference = angleDifference(angle, facing_angle);
+  /*printf("difference: %.2f\n", angle_difference);*/
   if(angle_difference > degrees * 0.5f)
   { return false; } // Point is not in the field of view
 
@@ -643,6 +645,30 @@ bool detectCollisionPointCone(dim2 point, dim2 pos_cone, float range, float degr
   if(distance > range)
   { return false; } // Point is out of range
   return true;
+}
+
+/** Expects angles to be in degrees in the range [0,360] **/
+bool detectCollisionLineCone(dim2 A, dim2 B, int precision, dim2 pos_cone, float range, float degrees, float facing_angle, float *closest_distance)
+{
+  /** More efficient would be to calculate intersections of line-circle first and see if those are in the cone **/
+  bool intersecting = false;
+  *closest_distance = 500000;
+  dim2 line_vector = B - A;
+  float line_length = length(line_vector);
+  dim2 step = line_vector / (float)precision;
+  dim2 point = A;
+  while(length(point - A) < line_length)
+  {
+    if(detectCollisionPointCone(point, pos_cone, range, degrees, facing_angle))
+    {
+      intersecting = true;
+      float distance = computeDistance(point, pos_cone);
+      if(distance < *closest_distance)
+      { *closest_distance = distance; }
+    }
+    point = point + step;
+  }
+  return intersecting;
 }
 
 float computeDistance(dim2 target, dim2 center)

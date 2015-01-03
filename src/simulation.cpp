@@ -132,6 +132,12 @@ void Simulation::update(int frame_time, input inputs)
   }
   else if(status == RUNNING)
   {
+    /*// debug
+    focus_human->direction.x = 0.02;
+    focus_human->direction.y = 0.02;
+    visible_information test = applyPerception(focus_human);
+    printf("seeing %d walls.\n", test.n_walls);
+    printf("seeing %d humans.\n", test.n_people);*/
     moveHumans(frame_time);
   }
 
@@ -178,13 +184,13 @@ visible_information Simulation::applyPerception(human *h)
     dim2 next = convertPixelToDim2(n);
 
     // See if the person can see this wall section
-    dim2 projected_point = projectPointOntoLineSegment(h->position, current, next);
-    if(detectCollisionPointCone(projected_point, h->position, h->vision_range, h->fov, facing_angle))
+    float distance;
+    if(detectCollisionLineCone(current, next, 200, h->position, h->vision_range, h->fov, facing_angle, &distance))
     {
       view.n_walls++;
-      float wall_distance = computeDistance(projected_point, h->position);
-      if(wall_distance < view.closest_wall_distance)
-      { view.closest_wall_distance = wall_distance; }
+      // Check if this wall is closer than others
+      if(distance < view.closest_wall_distance)
+      { view.closest_wall_distance = distance; }
     }
   }
 
