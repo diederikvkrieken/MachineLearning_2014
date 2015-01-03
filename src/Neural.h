@@ -8,13 +8,19 @@ class NN
   public:
     void init();
   private:
-    void initializeNN(),
+    void initializeNN();
     void trainNN();
+    vector<float> runNN(vector<float> input);
 
     vector< vector<float> > wHL,
-                            wOL;
-    vector<float> biasHL,
-                  biasOL;
+                            wOL,
+                            p_x,
+                            p_v;
+    vector<float> nHL,
+                  bHL,
+                  nOL,
+                  bOL,
+                  nIL;
     int n_input,
         n_hidden,
         n_output,
