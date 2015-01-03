@@ -560,7 +560,8 @@ human *Simulation::humanCollision(human *target, float *distance)
     { continue; }
 
     *distance = detectCollisionCircle(people[i].position, people[i].radius, target->position, target->radius);
-    if(*distance < 0.0f)
+    // Check if circles overlap and if the target human is walking towards the other human
+    if(*distance < 0.0f && dot(normalise(target->direction), normalise(people[i].position - target->position)) >= 0)
     { return &people[i]; }
   }
   return NULL;
