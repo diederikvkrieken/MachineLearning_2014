@@ -106,18 +106,25 @@ rgb repeatRGB(float value);
 float percentToPortion(float percent);
 
 float detectCollisionCircle(dim2 c1, float r1, dim2 c2, float r2);
+bool detectCollisionPointCone(dim2 point, dim2 pos_cone, float range, float degrees, float facing_angle);
 
 float computeAngle(dim2 target, dim2 center);
 float computeDistance(dim2 target, dim2 center);
 float computeDistance(dim3 target, dim3 center);
 float distancePointToLine(dim2 target, dim2 a, dim2 b);
+float distancePointToLineSegment(dim2 p, dim2 v, dim2 w);
+dim2 projectPointOntoLineSegment(dim2 p, dim2 v, dim2 w);
 float angleDifference(float a, float b);
 float toDegrees(float rad);
 float toRadians(float deg);
 float radiansPositiveOnly(float rad);
 vector<dim2> convertPixelToDim2(vector<pixel> a);
+dim2 convertPixelToDim2(pixel a);
 
 bool pointInPolygon(dim2 point, vector<dim2> polygon);
+
+float calculateMean(vector<float> a);
+float calculateVariance(vector<float> a, float mean);
 
 vector<string> splitString(string s, char token);
 

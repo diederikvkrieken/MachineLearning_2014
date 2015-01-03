@@ -30,6 +30,7 @@ class Simulation
     void setMinAge(int a) { min_age = a; }
     void setMaxAge(int a) { max_age = a; }
 
+    visible_information applyPerception(human *h);
     simulation_status getStatus() { return status; }
     vector<pixel> getWalls() { return wall_vertices; }
     string getStatusText(simulation_status s) { return status_text[s]; }
@@ -41,7 +42,6 @@ class Simulation
     void handleInput(int frame_time, input inputs);
     void moveHumans(int frame_time);
     void createWalls(input *inputs);
-    dim2 determineExit();
     void updateWallSurface();
     void fillWallBackground();
     void floodFillInside(rgb target, rgb overwrite, pixel start);
@@ -57,6 +57,13 @@ class Simulation
 
     human *humanCollision(human *target, float *distance);
     bool hitsWall(human *target);
+    vector<human *> visibleHumans(human *h);
+    void getAgeMeanVariance(vector<human *> humans, float *mean, float *variance);
+    void getRadiusMeanVariance(vector<human *> humans, float *mean, float *variance);
+    void getHeightMeanVariance(vector<human *> humans, float *mean, float *variance);
+    void getPanicMeanVariance(vector<human *> humans, float *mean, float *variance);
+    void getDirectionMeanVariance(vector<human *> humans, dim2 *mean, dim2 *variance);
+    dim2 determineExit();
 
     SDL_Surface *screen, *walls;
     SDL_Texture *vision_cone;
@@ -79,6 +86,7 @@ class Simulation
     float min_vision, max_vision,
           default_vision_range;
     float default_fov;  // The default field of view of a person, in degrees
+    float default_panic;
     Uint8 vision_alpha; // The alhpa channel value of the vision cone
     rgb colour_healthy, colour_fallen, colour_dead,
         vision_colour,

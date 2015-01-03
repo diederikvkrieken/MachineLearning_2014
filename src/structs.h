@@ -146,7 +146,7 @@ struct input
   const Uint8 *key_state;
 };
 
-/** Application specific **/
+/** -------------------- Application specific ------------------- **/
 enum human_gender
 {
   MALE,
@@ -186,7 +186,27 @@ struct human
   int radius; // Size of person, in pixels
   float vision_range; // How far someone can see ahead
   float fov;  // Field of view
+  float panic; // Panic number between 0 (low panic) and 1 (high panic)
   health_status status;
+};
+
+struct visible_information
+{
+  int n_people;
+  /*float male_ratio;*/
+  float mean_height;
+  float mean_radius;
+  float mean_age;
+  float mean_panic;
+  dim2 mean_direction;
+  float var_height;
+  float var_radius;
+  float var_age;
+  float var_panic;
+  dim2 var_direction;
+  int n_walls;
+  float closest_wall_distance;
+  float exit_distance;
 };
 
 struct circle_surface
