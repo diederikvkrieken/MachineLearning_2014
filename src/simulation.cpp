@@ -80,6 +80,7 @@ void Simulation::fillBuilding()
         new_human.position.set(randInt(0 + new_human.radius, master->getResolution().x - 1 - new_human.radius),
                                randInt(0 + new_human.radius, master->getResolution().y - 1 - new_human.radius));
       } while(!pointInPolygon(new_human.position, walls_vector) || hitsWall(&new_human, true));
+      new_human.previous_position = new_human.position;
 
       // Direction towards the exit
       new_human.direction = normalise(exit_location - new_human.position);
@@ -225,9 +226,10 @@ void Simulation::moveHumans(int frame_time)
 
     // Detect collisions
     float distance; /** Use this to simulate pushing **/
-    if(humanCollision(h, &distance) != NULL || hitsWall(h, false))
+    human *collided = humanCollision(h, &distance);
+    if(collided != NULL || hitsWall(h, false))
     {
-      /*h->position = h->previous_position;*/
+      h->position = h->previous_position;
       continue;
     }
 

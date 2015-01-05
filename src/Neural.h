@@ -10,7 +10,10 @@ class NN
   private:
     void initializeNN();
     void trainNN();
-    double calculateError(vector<float> input);
+    float calculateError(vector<float> input);
+	float randomFloat(float min, float max, float precision);
+	float activationFunction(float input ,float bias);
+
     vector<float> runNN(vector<float> input);
 
     vector< vector<float> > wHL,
