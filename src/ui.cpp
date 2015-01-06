@@ -189,7 +189,7 @@ void UI::handleTextInput(bool *done, input *inputs)
       text = text.substr(0, text.size() - 1);
     }
   }
-  else if(inputs->key == SDL_SCANCODE_RETURN)
+  else if(inputs->key == SDL_SCANCODE_RETURN || inputs->key == SDL_SCANCODE_KP_ENTER)
   {
     // End text input (Enter)
     *done = true;

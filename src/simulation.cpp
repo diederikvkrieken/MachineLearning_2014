@@ -225,7 +225,7 @@ void Simulation::moveHumans(int frame_time)
     human *h = &people[i];
 
     // Detect collisions
-    float distance; /** Use this to simulate pushing **/
+    float distance;
     human *collided = humanCollision(h, &distance);
     if(collided != NULL || hitsWall(h, false))
     {

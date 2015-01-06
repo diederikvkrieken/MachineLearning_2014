@@ -43,7 +43,7 @@ void NN::initializeNN()
 /**TO-DO toevoegen aan functions cpp+h **/
 float NN::randomFloat(float min, float max, float precision)
 {
-	divisor = 1/precision;
+	float divisor = 1/precision;
 	return randInt(int(min*divisor),int(max*divisor)) / divisor;
 }
 
@@ -57,7 +57,7 @@ void NN::trainNN()
 	float c1 = 1.4;
 	float c2 = 1.4;
 	float w = 1.4;
-	
+
     //exit-error can still be added (see: voorbeeld_code: Iris flowers ML)
     //number of weights+bias
     /** bias per layer ipv node**/
@@ -68,7 +68,7 @@ void NN::trainNN()
     /** TO-DO best global postion vector klopt zo?**/
     // best_global_position = 0;
     /** TO-DO maxValue Controleren **/
-    float best_global_error = 1000000000000;
+    float best_global_error = 100000000;
 
     // swarm initialization
     // initialise each Particle in the swarm with random positions and velocities
