@@ -42,6 +42,7 @@ class Simulation
   private:
     void handleInput(int frame_time, input inputs);
     void moveHumans(int frame_time);
+    void updateFallen();
     void push(human *a, human *b);
     void createWalls(input *inputs);
     void updateWallSurface();
@@ -96,6 +97,7 @@ class Simulation
     Uint8 vision_alpha; // The alhpa channel value of the vision cone
     float chance_collision_fall;  // The chance that somebody will fall if they lose a push impact
     float trample_constant; // The amount of trample status added per (time * radius)
+    Uint32 push_rate; // How many ms must be between each push from one person
     Uint32 standup_time;  // Time in ms after which a fallen person will stand up again
     rgb colour_healthy, colour_fallen, colour_dead,
         vision_colour,

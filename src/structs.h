@@ -192,6 +192,7 @@ struct human
   health_status status;
   float trample_status; // Value in [0,1] that indicates how close somebody is to dying from being trampled
   Timer lying;  // Time in ms indicating how long someone has been lying on the ground
+  Timer push_time_out;  // How long somebody hasn't pushed someone else
 };
 
 struct visible_information

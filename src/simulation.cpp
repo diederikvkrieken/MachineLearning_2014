@@ -28,6 +28,7 @@ void Simulation::init(Master *master_ptr)
   chance_collision_fall = 0.5f;
   standup_time = 4000;
   trample_constant = 0.0001f;
+  push_rate = 2000;
 
   exit_location.set(0,0);
 
@@ -70,6 +71,7 @@ void Simulation::fillBuilding()
       new_human.ID = people.size();
       new_human.gender = MALE;
       new_human.status = HEALTHY;
+      new_human.push_time_out.start();
       new_human.trample_status = 0.0f;
       new_human.panic = default_panic;
       new_human.age = randInt(min_age, max_age);
@@ -144,6 +146,7 @@ void Simulation::update(int frame_time, input inputs)
     visible_information test = applyPerception(focus_human);
     printf("seeing %d walls.\n", test.n_walls);
     printf("seeing %d humans.\n", test.n_people);*/
+    updateFallen();
     moveHumans(frame_time);
   }
 
@@ -238,7 +241,7 @@ void Simulation::moveHumans(int frame_time)
     // Detect collisions
     float distance;
     human *collided = humanCollision(h, &distance);
-    if(collided != NULL/* && !collisionChecked(checked_collisions, h, collided)*/)
+    if(collided != NULL)
     {
       // Has collided with a human
 
@@ -250,7 +253,8 @@ void Simulation::moveHumans(int frame_time)
           /** TODO: trample() **/
         }
         else if(collided->status == HEALTHY &&
-                (computeChance(getPushChance(h), 100) || computeChance(getPushChance(collided), 100)))  // Check if one of them wants to push
+                ((computeChance(getPushChance(h), 100) && h->push_time_out.getTime() > push_rate) ||  // Check if one of them wants to push
+                 (computeChance(getPushChance(collided), 100) && collided->push_time_out.getTime() > push_rate)))
         {
           push(h, collided);
         }
@@ -264,7 +268,8 @@ void Simulation::moveHumans(int frame_time)
 
 
       // Check which human is in front
-      if(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0)
+      if(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0 &&
+         collided->status == HEALTHY)
       {
         h->position = h->previous_position;
         // [collided] is in front of [h]: don't move [h]
@@ -284,6 +289,26 @@ void Simulation::moveHumans(int frame_time)
   }
 }
 
+void Simulation::updateFallen()
+{
+  for(unsigned int i=0; i < people.size(); i++)
+  {
+    human *h = &people[i];
+    if(h->status == FALLEN)
+    {
+      float distance;
+      human *collided = humanCollision(h, &distance);
+      if(h->lying.isStarted() && h->lying.getTime() > standup_time &&
+         (collided == NULL || collided->status != HEALTHY))  // The area is clear
+      {
+        h->lying.stop();
+        h->lying.reset();
+        h->status = HEALTHY;
+      }
+    }
+  }
+}
+
 void Simulation::push(human *a, human *b)
 {
   float a_score, b_score; // The human with the highest score wins
@@ -294,6 +319,10 @@ void Simulation::push(human *a, human *b)
   bool should_fall = computeChance(0.5f, 100);
   if(!should_fall)
   { return; }
+
+  // Reset time-outs
+  a->push_time_out.reset();
+  b->push_time_out.reset();
 
   // Constants to normalize score factors
   direction_weight = 1.0f;
