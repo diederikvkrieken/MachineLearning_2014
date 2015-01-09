@@ -8,6 +8,6 @@ max_vision_range:150
 min_speed:0.005
 max_speed:0.03
 min_height:40
-max_height:230
+max_height:205
 min_age:2
 max_age:98
