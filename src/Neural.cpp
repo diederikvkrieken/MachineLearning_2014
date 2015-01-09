@@ -40,16 +40,13 @@ void NN::initializeNN()
   }
 }
 
-/**TO-DO toevoegen aan functions cpp+h **/
-float NN::randomFloat(float min, float max, float precision)
-{
-	float divisor = 1/precision;
-	return randInt(int(min*divisor),int(max*divisor)) / divisor;
-}
-
 void NN::trainNN()
 {
     /** x_max x_min v_max v_min **/
+    int x_max = 10;
+    int x_min = -10;
+    int v_max = 1;
+    int v_min = -1;
     int maxEpoch = 1000;
     int nParticles = 20; //youtube video gives optimal range 20-40
     int trainData = 0; //moet meegegeven worden aan trainNN function
@@ -60,11 +57,7 @@ void NN::trainNN()
 
     //exit-error can still be added (see: voorbeeld_code: Iris flowers ML)
     //number of weights+bias
-    /** bias per layer ipv node**/
     int nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
-    /** TO-DO RANDOM FUNCTION Controleren **/
-    // randInt(0, 100) / 100.0
-    // rnd = rand();
     /** TO-DO best global postion vector klopt zo?**/
     // best_global_position = 0;
     /** TO-DO maxValue Controleren **/
@@ -72,7 +65,6 @@ void NN::trainNN()
 
     // swarm initialization
     // initialise each Particle in the swarm with random positions and velocities
-
     for (int i = 0; i<nParticles;i++)
     {
       //Particle initialization
@@ -87,13 +79,14 @@ void NN::trainNN()
       }
       // Error check?????
       /** TO-DO calculateError, data meegeven?, hoe error uitrekenen? **/
-      p_be[i] = calculateError(p_x[i], data);
+      p_be[i] = calculateError(p_x[i]);
       if (p_be[i] < best_global_error)
       {
         best_global_error = p_be[i];
         best_global_position = p_x[i];
       }
       p_bx[i] = p_x[i];//first position is best position
+      randomOrder[i]=i;
     }
 
     /** TO-DO particle volgorde randomizeren **/
@@ -106,8 +99,11 @@ void NN::trainNN()
         break;
       }
       //update each particle
-      for (int i = 0; i<nParticles;i++)
+      /** ONDERSTAANDE ZOU MOETEN SHUFFELEN.**/
+      std::random_shuffle ( randomOrder.begin(), randomOrder.end() );
+      for (int z = 0; z<randomOrder.length();z++) //RandomOrder.length == nParticles
       {
+        i = randomOrder[z];
         // particle update
         for (int j = 0; j<nW;j++)
         {
@@ -122,7 +118,7 @@ void NN::trainNN()
         }
 
         // 3. compute new error with the new position
-        double new_error = calculateError(p_x[i], data);
+        double new_error = calculateError(p_x[i]);
         if (new_error < best_global_error)
         {
           best_global_error = p_be[i];
@@ -142,7 +138,7 @@ void NN::trainNN()
 
 }
 
-double NN::calculateError(vector<float> weights, data)
+double NN::calculateError(vector<float> weights)
 {
   //JUISTE ANTWOORD/OUTPUT GEVEN/BEPALEN
   data = trainData;
@@ -181,7 +177,7 @@ void positionToWeights(vector<float> postition)
     }
   }
   // hidden node bias
-  for(int j=0; j < n_output; j++)
+  for(int j=0; j < n_hidden; j++)
   {
     bHL[j] = position[i];
     i++;
@@ -197,6 +193,7 @@ void positionToWeights(vector<float> postition)
 float NN::activationFunction(float input ,float bias)
 {
 	// sigmoid function
+	x = input + bias;
 	return 1/(1+expf(-x));
 	// tanh function
 	// return tanh(x);
@@ -220,9 +217,6 @@ vector<float> NN::runNN(vector<float> input)
         }
         nHL[i] = activationFunction(nHL[i],bHL[i]);
     }
-    /** TO-DO tanh of sigmoid function gebruiken **/
-    //FUNCTION IMPLIMENTATION TANH OR SIGMOID
-
     //Calcute output layer nodes
     for(int i = 0; i<n_output;i++)
     {
@@ -231,7 +225,7 @@ vector<float> NN::runNN(vector<float> input)
         {
             nOL[i] = nOL[i] + wOL[i][j]*nHL[j];
         }
-        nOL[i] = nOL[i] + bOL[i];
+        nOL[i] = activationFunction(nOL[i],bOL[i]);
     }
     return nOL;
 }

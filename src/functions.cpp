@@ -943,6 +943,12 @@ void makeColourTransparent(SDL_Surface *surface, rgb colour)
   SDL_SetColorKey(surface, SDL_TRUE, SDL_MapRGBA(surface->format, r, g, b, 255));
 }
 
+float NN::randomFloat(float min, float max, float precision)
+{
+	float divisor = 1/precision;
+	return randInt(int(min*divisor),int(max*divisor)) / divisor;
+}
+
 
 
 
