@@ -135,5 +135,6 @@ Uint32 getPixel(SDL_Surface *surface, int x, int y);
 rgb getPixelColour(SDL_Surface *surface, int x, int y);
 
 void makeColourTransparent(SDL_Surface *surface, rgb colour);
+float randomFloat(float min, float max, float precision);
 
 #endif

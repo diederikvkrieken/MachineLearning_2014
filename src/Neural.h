@@ -11,7 +11,6 @@ class NN
     void initializeNN();
     void trainNN();
     float calculateError(vector<float> input);
-	float randomFloat(float min, float max, float precision);
 	float activationFunction(float input ,float bias);
 
     vector<float> runNN(vector<float> input);
@@ -21,6 +20,9 @@ class NN
                             p_x,
                             p_v,
                             p_bx;//particle best position
+
+    vector<int> randomOrder;
+
     vector<float> nHL,
                   bHL,
                   nOL,
