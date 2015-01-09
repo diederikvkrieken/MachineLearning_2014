@@ -1,6 +1,6 @@
 walls_file:square.wall
 single_cone:1
-n_people:500
+n_people:250
 min_radius:4
 max_radius:8
 min_vision_range:35

@@ -7,6 +7,8 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 
+#include "timer.h"
+
 using namespace std;
 
 const float PI = 3.14159265359;
@@ -188,6 +190,8 @@ struct human
   float fov;  // Field of view
   float panic; // Panic number between 0 (low panic) and 1 (high panic)
   health_status status;
+  float trample_status; // Value in [0,1] that indicates how close somebody is to dying from being trampled
+  Timer lying;  // Time in ms indicating how long someone has been lying on the ground
 };
 
 struct visible_information

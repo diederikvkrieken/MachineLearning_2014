@@ -25,6 +25,10 @@ void Simulation::init(Master *master_ptr)
   default_fov = 90.0f;
   default_panic = 0.2f;
   vision_alpha = 50;
+  chance_collision_fall = 0.5f;
+  standup_time = 4000;
+  trample_constant = 0.0001f;
+
   exit_location.set(0,0);
 
   colour_healthy = makeRGB(GREEN);
@@ -66,6 +70,7 @@ void Simulation::fillBuilding()
       new_human.ID = people.size();
       new_human.gender = MALE;
       new_human.status = HEALTHY;
+      new_human.trample_status = 0.0f;
       new_human.panic = default_panic;
       new_human.age = randInt(min_age, max_age);
       new_human.height = randInt(min_height, max_height);
@@ -220,22 +225,107 @@ void Simulation::handleInput(int frame_time, input inputs)
 
 void Simulation::moveHumans(int frame_time)
 {
+  vector< vector<human *> > checked_collisions; // Keep track of when two humans collide to avoid double pushing/trampling
+
   for(unsigned int i=0; i < people.size(); i++)
   {
     human *h = &people[i];
 
+    // Don't do anything with disabled people
+    if(h->status == FALLEN || h->status == DEAD)
+    { continue; }
+
     // Detect collisions
     float distance;
     human *collided = humanCollision(h, &distance);
-    if(collided != NULL || hitsWall(h, false))
+    if(collided != NULL/* && !collisionChecked(checked_collisions, h, collided)*/)
     {
-      h->position = h->previous_position;
-      continue;
+      // Has collided with a human
+
+      // Handle pushing and trampling
+      if(!collisionChecked(checked_collisions, h, collided))
+      {
+        if(collided->status == FALLEN)
+        {
+          /** TODO: trample() **/
+        }
+        else if(collided->status == HEALTHY &&
+                (computeChance(getPushChance(h), 100) || computeChance(getPushChance(collided), 100)))  // Check if one of them wants to push
+        {
+          push(h, collided);
+        }
+      }
+
+      // Update collision tracking
+      vector<human *> human_pair;
+      human_pair.push_back(h);
+      human_pair.push_back(collided);
+      checked_collisions.push_back(human_pair);
+
+
+      // Check which human is in front
+      if(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0)
+      {
+        h->position = h->previous_position;
+        // [collided] is in front of [h]: don't move [h]
+        continue;
+      }
+    }
+    else if(hitsWall(h, false))
+    {
+       h->position = h->previous_position;
+       // Don't move [h]
+       continue;
     }
 
     // Calculate new position based on frame time and direction
     h->previous_position = h->position;
     h->position = h->position + h->direction * frame_time;
+  }
+}
+
+void Simulation::push(human *a, human *b)
+{
+  float a_score, b_score; // The human with the highest score wins
+  float a_advantage, b_advantage; // Which human has advantage related to position and direction
+  float height_weight, radius_weight, panic_weight, direction_weight;
+
+  // Check if a fall should occur
+  bool should_fall = computeChance(0.5f, 100);
+  if(!should_fall)
+  { return; }
+
+  // Constants to normalize score factors
+  direction_weight = 1.0f;
+  height_weight = 0.003f;
+  radius_weight = 0.125f;
+  panic_weight = 0.3f;
+
+  float dot_product = dot(normalise(a->direction), normalise(b->direction));
+  if(dot(normalise(a->direction), normalise(b->position - a->position)) >= 0) // if a is facing b
+  { a_advantage = (dot_product + 1.0f) / 2.0f; }
+  else
+  { a_advantage = 1.0f - (dot_product + 1.0f) / 2.0f; }
+  b_advantage = 1.0f - a_advantage;
+
+  a_score = (a->height - b->height) * height_weight +
+            (a->radius - b->radius) * radius_weight +
+            a->panic * panic_weight +
+            a_advantage * direction_weight;
+  b_score = (b->height - a->height) * height_weight +
+            (b->radius - a->radius) * radius_weight +
+            b->panic * panic_weight +
+            b_advantage * direction_weight;
+
+  if(a_score > b_score)
+  {
+    b->status = FALLEN;
+    b->lying.start(); // Start counting down stand-up timer
+  }
+  else
+  {
+    a->status = FALLEN;
+    a->lying.start();
   }
 }
 
@@ -562,11 +652,22 @@ human *Simulation::humanCollision(human *target, float *distance)
     { continue; }
 
     *distance = detectCollisionCircle(people[i].position, people[i].radius, target->position, target->radius);
-    // Check if circles overlap and if the target human is walking towards the other human
-    if(*distance < 0.0f && dot(normalise(target->direction), normalise(people[i].position - target->position)) >= 0)
+    // Check if circles overlap
+    if(*distance < 0.0f)
     { return &people[i]; }
   }
   return NULL;
+}
+
+bool Simulation::collisionChecked(vector< vector<human *> > checked_collisions, human *a, human *b)
+{
+  for(unsigned int i=0; i < checked_collisions.size(); i++)
+  {
+    if((checked_collisions[i][0] == a && checked_collisions[i][1] == b) ||
+       (checked_collisions[i][0] == b && checked_collisions[i][1] == a))
+    { return true; }
+  }
+  return false;
 }
 
 bool Simulation::hitsWall(human *target, bool include_exit)
@@ -610,6 +711,14 @@ vector<human *> Simulation::visibleHumans(human *h)
     visible.push_back(compare);
   }
   return visible;
+}
+
+
+float Simulation::getPushChance(human *h)
+{
+  float chance = h->panic - 0.15f;
+  clamp(&chance, 0.0f, 1.0f);
+  return chance;
 }
 
 void Simulation::getAgeMeanVariance(vector<human *> humans, float *mean, float *variance)
