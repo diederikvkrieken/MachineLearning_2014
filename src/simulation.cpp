@@ -29,7 +29,6 @@ void Simulation::init(Master *master_ptr)
   standup_time = 4000;
   trample_constant = 0.00005f;
   push_rate = 2000;
-//  network.initializeNN();
 
   exit_location.set(0,0);
 
@@ -59,7 +58,7 @@ void Simulation::init(Master *master_ptr)
 void Simulation::fillBuilding()
 {
   int tries = 0;
-  
+
   // Reset humans
   people.clear();
 
