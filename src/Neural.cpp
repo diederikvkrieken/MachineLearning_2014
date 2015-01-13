@@ -45,149 +45,91 @@ void NN::initializeNN()
       wOL[j][i] = randInt(0, 100) / 10.0;
     }
   }
+
+
+  /** Parameters of the particle swarm **/
+  /** x_max x_min v_max v_min **/
+  float x_max = 10;
+  float x_min = -10;
+  float v_max = 1;
+  float v_min = -1;
+  //youtube video gives optimal range 20-40
+  float precision = 0.001;
+  float c1 = 1.4;
+  float c2 = 1.4;
+  float w = 1.4;
+  float min_error = 0.1;
+
+  //number of weights+bias
+  int nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
+  /** TO-DO best global postion vector klopt zo?**/
+  //best_global_position = 0;
+  /** TO-DO maxValue Controleren **/
+  float best_global_error = 100000000;
+  // Allocate size
+  vector<float> inside_vector;
+  for(int i=0; i < nParticles; i++)
+  {
+    inside_vector.assign(nW,0);
+    p_x.push_back(inside_vector);
+    p_v.push_back(inside_vector);
+  }
+  // swarm initialization
+  // initialise each Particle in the swarm with random positions and velocities
+  for (int i = 0; i<nParticles;i++)
+  {
+    //Particle initialization
+    for (int j = 0; j<nW;j++)
+    {
+      // particle position:
+      // randomPosition = (hi - lo) * random_double + lo; (waarde tussen max en min)
+      p_x[i][j] = (x_max - x_min) * randomFloat(0, 1, precision) + x_min;
+      // particle velocity:
+      // randomVelocity[j] = (hi - lo) * rnd.NextDouble() + lo;
+      p_v[i][j] = (v_max - v_min) * randomFloat(0, 1, precision) + v_min;
+    }
+  }
 }
 
-void NN::trainNN()
+void NN::trainNN(vector <int> resultaat)
 {
-    /** x_max x_min v_max v_min **/
-    int x_max = 10;
-    int x_min = -10;
-    int v_max = 1;
-    int v_min = -1;
-    //youtube video gives optimal range 20-40
-    //int trainData = 0; //moet meegegeven worden aan trainNN function
-    float precision = 0.001;
-    float c1 = 1.4;
-    float c2 = 1.4;
-    float w = 1.4;
-    float min_error = 0.1;
-    //vector<float> best_global_error = 0;
-
-    //exit-error can still be added (see: voorbeeld_code: Iris flowers ML)
-    //number of weights+bias
-    int nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
-    /** TO-DO best global postion vector klopt zo?**/
-    //best_global_position = 0;
-    /** TO-DO maxValue Controleren **/
-    float best_global_error = 100000000;
-    // Allocate size
-    vector<float> inside_vector;
-    for(int i=0; i < nParticles; i++)
+  for(int i=0; i < nParticles; i++)
+  {
+    if (resultaat[i] < p_be[i])
     {
-      inside_vector.assign(nW,0);
-      p_x.push_back(inside_vector);
-      p_v.push_back(inside_vector);
+      p_be[i] = resultaat[i];
+      p_bx[i] = p_x[i];
     }
-    // swarm initialization
-    // initialise each Particle in the swarm with random positions and velocities
-    for (int i = 0; i<nParticles;i++)
+    if (resultaat[i] < best_global_error)
     {
-      //Particle initialization
-      for (int j = 0; j<nW;j++)
-      {
-        // particle position:
-        // randomPosition = (hi - lo) * random_double + lo; (waarde tussen max en min)
-        p_x[i][j] = (x_max - x_min) * randomFloat(0, 1, precision) + x_min;
-        // particle velocity:
-        // randomVelocity[j] = (hi - lo) * rnd.NextDouble() + lo;
-        p_v[i][j] = (v_max - v_min) * randomFloat(0, 1, precision) + v_min;
-      }
+      best_global_error = resultaat[i];
+      best_global_position = p_x[i];
     }
+  }
 
-    /** TO-DO particle volgorde randomizeren **/
-    // max epochs + check/exit bij kleine error
-    for (int epoch = 0; epoch<maxEpoch;epoch++)
+  // Update particles
+  for(int i=0; i < nParticles; i++)
+  {
+    for (int j = 0; j<nW;j++)
     {
-      if (best_global_error<min_error)
-      {
-        /** TO-DO Break correct implementeren**/
-        break;
-      }
-      // Error check?????
-      /** TO-DO Simulatie runnen + error bepalen
+      // 1. new velocity
+      // new velocity = (w * current_v)+(c1 * r1 * p_best_pos - current_pos)+(c2 * r2 * global_best_pos - current_pos)
+      p_v[i][j] = (w * p_v[i][j])
+      + (c1*randomFloat(0, 1, precision)*(p_bx[i][j]-p_x[i][j]))
+      + (c2*randomFloat(0, 1, precision)*(best_global_position[j]-p_x[i][j]));
 
-      for n < nPartilces{
+      // Ensure smallest/largest
+      clamp(*p_v[i][j], v_min, v_max);
 
-      network.postionToWeights(p_x[n]);
-      Simatie(network.runNN(input persoon[1...n_persons]))
-      leef_tijd[n] = lengthe_leven
+      // 2. compute new position with the new velocity
+      // Position = current_pos + new velocity;
+      p_x[i][j] = p_x[i][j] + p_v[i][j];
 
-      postionToWeights(p_x[n]);
-      Simatie(runNN(input persoon[1...n_persons]))
-      leef_tijd[n] = lengthe_leven
-      ....
-      postionToWeights(p_x[n]);
-      Simatie(runNN(input persoon[1...n_persons]))
-      leef_tijd[n] = lengthe_leven
-      }
-       welke particle beste
-
-       Update elke p_v = p_beste_plek + global beste plek.
-
-      }
-       **/
-//      p_be[i] = calculateError(p_x[i]);
-//      if (p_be[i] < best_global_error)
-//      {
-//        best_global_error = p_be[i];
-//        best_global_position = p_x[i];
-//      }
-//      p_bx[i] = p_x[i];//first position is best position
-//      randomOrder[i]=i;
-
-      //update each particle
-      /** ONDERSTAANDE ZOU MOETEN SHUFFELEN.**/
-      std::random_shuffle ( randomOrder.begin(), randomOrder.end() );
-      for (unsigned int z = 0; z<randomOrder.size();z++) //RandomOrder.length == nParticles
-      {
-        int i = randomOrder[z];
-        // particle update
-        for (int j = 0; j<nW;j++)
-        {
-          // 1. new velocity
-          // new velocity = (w * current_v)+(c1 * r1 * p_best_pos - current_pos)+(c2 * r2 * global_best_pos - current_pos)
-          p_v[i][j] = (w * p_v[i][j])
-          + (c1*randomFloat(0, 1, precision)*(p_bx[i][j]-p_x[i][j]))
-          + (c2*randomFloat(0, 1, precision)*(best_global_position[j]-p_x[i][j]));
-          // 2. compute new position with the new velocity
-          // newrandInt(0, 100) / 100.0Position = current_pos + new velocity;
-          p_x[i][j] = p_x[i][j] + p_v[i][j];
-        }
-
-        // 3. compute new error with the new position
-//        double new_error = calculateError(p_x[i]);
-        if (new_error < best_global_error)
-        {
-          best_global_error = p_be[i];
-          best_global_position = p_x[i];
-        }
-        if (new_error < p_be[i])
-        {
-          p_be[i] = new_error;
-          p_bx[i] = p_x[i];//current position is better position
-        }
-
-      }
+      // Ensure smallest/largest
+      clamp(*p_x[i][j], x_min, x_max)
     }
-    /** TO-DO return best_global_position of gewoon wegschrijven?**/
-    //return best_global_postion;
-    //Return optimal
-
+  }
 }
-
-//float NN::calculateError(vector<float> weights )
-//{
-//  //JUISTE ANTWOORD/OUTPUT GEVEN/BEPALEN
-//  //data = trainData;
-// //  requiredResult = requiredData;
-//  positionToWeights(weights);
-//  //Elke keer data set runnen of 1 voor een, of online learning?
-//  vector <float> result = runNN(data);
-//  //mean squard error or visa versa
-//  //MSE(data, result);
-//  return result;
-//
-//}
 
 void NN::positionToWeights(int i)
 {
