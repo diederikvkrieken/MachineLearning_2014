@@ -215,6 +215,12 @@ struct visible_information
   float exit_distance;
 };
 
+struct human_action
+{
+  dim2 direction;
+  float panic;
+};
+
 struct circle_surface
 {
   int radius;

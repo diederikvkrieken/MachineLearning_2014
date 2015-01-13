@@ -52,9 +52,6 @@ class Master
         frame_time_counter;
     int fps_output_rate;    // Every how many ms the FPS should be displayed
     Timer frame_timer;
-
-    Simulation simulation;
-    UI ui;
 };
 
 #endif // MASTER_H

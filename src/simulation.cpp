@@ -59,13 +59,15 @@ void Simulation::init(Master *master_ptr)
 void Simulation::fillBuilding()
 {
   int tries = 0;
+  
+  // Reset humans
+  people.clear();
 
   vector<dim2> walls_vector = convertPixelToDim2(wall_vertices);
   while(people.size() < (unsigned int)n_people)
   {
     human new_human;
     human *collided;
-    // Find a position without collision with other humans
     do
     {
       /** TODO: gender is still static **/
@@ -81,18 +83,19 @@ void Simulation::fillBuilding()
       new_human.radius = randInt(min_radius, max_radius);
       new_human.vision_range = randInt(min_vision, max_vision);
       new_human.fov = default_fov;
-      /*new_human.direction.set(randInt(-100, 100), randInt(-100, 100));
-      new_human.direction = normalise(new_human.direction);*/
+      new_human.direction.set(randInt(-100, 100), randInt(-100, 100));
+      new_human.direction = normalise(new_human.direction);
       // Find a position in the building
       do
       {
+        // Find a position without collision with other humans
         new_human.position.set(randInt(0 + new_human.radius, master->getResolution().x - 1 - new_human.radius),
                                randInt(0 + new_human.radius, master->getResolution().y - 1 - new_human.radius));
       } while(!pointInPolygon(new_human.position, walls_vector) || hitsWall(&new_human, true));
       new_human.previous_position = new_human.position;
 
       // Direction towards the exit
-      new_human.direction = normalise(exit_location - new_human.position);
+      /*new_human.direction = normalise(exit_location - new_human.position);*/
       // Speed
       float speed = min_speed + (randInt(0, 100) / 100.0f) * (max_speed - min_speed);
       new_human.direction = new_human.direction * speed;
@@ -148,7 +151,6 @@ void Simulation::update(int frame_time, input inputs)
     visible_information test = applyPerception(focus_human);
     printf("seeing %d walls.\n", test.n_walls);
     printf("seeing %d humans.\n", test.n_people);*/
-    visible_information information = applyPerception(focus_human);
     updateFallen();
     moveHumans(frame_time);
   }
@@ -270,7 +272,6 @@ void Simulation::moveHumans(int frame_time)
       human_pair.push_back(h);
       human_pair.push_back(collided);
       checked_collisions.push_back(human_pair);
-
 
       // Check which human is in front
       if(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0 &&

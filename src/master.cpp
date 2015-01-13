@@ -98,8 +98,9 @@ bool Master::init()
 
 void Master::run()
 {
-  simulation.init(this);
-  ui.init(this);
+  machine.init(this);
+  /*simulation.init(this);
+  ui.init(this);*/
 
   // Make main texture from main surface
   screen = SDL_CreateTextureFromSurface(renderer, simulation.getScreen());
@@ -129,7 +130,8 @@ void Master::run()
     // Clear screen
     SDL_RenderClear(renderer);
 
-    simulation.update(last_frame_time, inputs);
+    machine.run(last_frame_time, inputs);
+    /*simulation.update(last_frame_time, inputs);*/
 
     // Update screen
     SDL_RenderPresent(renderer);

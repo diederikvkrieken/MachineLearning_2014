@@ -34,6 +34,7 @@ class Simulation
 
     visible_information applyPerception(human *h);
     simulation_status getStatus() { return status; }
+    int getResult();
     vector<pixel> getWalls() { return wall_vertices; }
     string getStatusText(simulation_status s) { return status_text[s]; }
     SDL_Surface *getScreen() { return screen; }
