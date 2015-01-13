@@ -2,6 +2,7 @@
 #define SIMULATION_H
 
 #include "functions.h"
+#include "Neural.h"
 
 class Master;
 class UI;
@@ -107,6 +108,8 @@ class Simulation
 
     Master *master;
     UI *ui;
+    NN network;
+
 };
 
 #endif // SIMULATION

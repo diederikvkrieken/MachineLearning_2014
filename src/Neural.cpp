@@ -54,6 +54,8 @@ void NN::trainNN()
 	float c1 = 1.4;
 	float c2 = 1.4;
 	float w = 1.4;
+	float min_error = 0.1;
+	 //vector<float> best_global_error = 0;
 
     //exit-error can still be added (see: voorbeeld_code: Iris flowers ML)
     //number of weights+bias
@@ -80,6 +82,7 @@ void NN::trainNN()
       // Error check?????
       /** TO-DO calculateError, data meegeven?, hoe error uitrekenen? **/
       p_be[i] = calculateError(p_x[i]);
+      best_global_position = p_x[i];
       if (p_be[i] < best_global_error)
       {
         best_global_error = p_be[i];
@@ -101,17 +104,17 @@ void NN::trainNN()
       //update each particle
       /** ONDERSTAANDE ZOU MOETEN SHUFFELEN.**/
       std::random_shuffle ( randomOrder.begin(), randomOrder.end() );
-      for (int z = 0; z<randomOrder.length();z++) //RandomOrder.length == nParticles
+      for (int z = 0; z<randomOrder.size();z++) //RandomOrder.length == nParticles
       {
-        i = randomOrder[z];
+        int i = randomOrder[z];
         // particle update
         for (int j = 0; j<nW;j++)
         {
           // 1. new velocity
           // new velocity = (w * current_v)+(c1 * r1 * p_best_pos - current_pos)+(c2 * r2 * global_best_pos - current_pos)
           p_v[i][j] = (w * p_v[i][j])
-          + (c1*randomFloat(0, 1, precision)*(p_bx[i][j]-p_x[i][j]))
-          + (c2*randomFloat(0, 1, precision)*(global_best_pos[j]-p_x[i][j]));
+          + (c1*randomFloat(0, 1, precision)*(p_bx[i][j]-p_x[i][j]));
+          //+ (c2*randomFloat(0, 1, precision)*(global_best_pos[j]-p_x[i][j]));
           // 2. compute new position with the new velocity
           // newrandInt(0, 100) / 100.0Position = current_pos + new velocity;
           p_x[i][j] = p_x[i][j] + p_v[i][j];
@@ -138,35 +141,35 @@ void NN::trainNN()
 
 }
 
-double NN::calculateError(vector<float> weights)
+float NN::calculateError(vector<float> weights )
 {
   //JUISTE ANTWOORD/OUTPUT GEVEN/BEPALEN
-  data = trainData;
-  requiredResult = requiredData;
+  //data = trainData;
+ //  requiredResult = requiredData;
   positionToWeights(weights);
   //Elke keer data set runnen of 1 voor een, of online learning?
-  result = runNN(data);
+  //result = runNN(data);
   //mean squard error or visa versa
-  MSE(data, result);
+  //MSE(data, result);
 
 }
 
-void positionToWeights(vector<float> postition)
+void NN::positionToWeights(vector<float> position)
 {
   int nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;;
-  if (postition.Length != nW)
+  if (position.size() != nW)
   {
     /** TO-DO error **/
     //throw exception??
     //error!!
   }
-  i=0;
+  int i=0;
   for(int j=0; j < n_hidden; j++)
   {
     // hidden to input nodes weights
     for(int k=0; k < n_input; k++)
     {
-      wHL[j][k] = postition[i];
+      wHL[j][k] = position[i];
       i++;
     }
     // output to hidden nodes weights
@@ -193,7 +196,7 @@ void positionToWeights(vector<float> postition)
 float NN::activationFunction(float input ,float bias)
 {
 	// sigmoid function
-	x = input + bias;
+	float x = input + bias;
 	return 1/(1+expf(-x));
 	// tanh function
 	// return tanh(x);

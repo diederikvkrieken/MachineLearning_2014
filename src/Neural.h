@@ -7,11 +7,12 @@ class NN
 {
   public:
     void init();
-  private:
     void initializeNN();
+
     void trainNN();
     float calculateError(vector<float> input);
-	float activationFunction(float input ,float bias);
+    void positionToWeights(vector<float> postition);
+    float activationFunction(float input ,float bias);
 
     vector<float> runNN(vector<float> input);
 
@@ -29,11 +30,13 @@ class NN
                   bOL,
                   nIL,
                   best_global_position,
-                  p_be;//particle best error
+                  p_be,
+                  result;//particle best error
     int n_input,
         n_hidden,
         n_output,
         n_layers;
+        //private:
 };
 
 #endif // NEURAL_H

@@ -29,6 +29,7 @@ void Simulation::init(Master *master_ptr)
   standup_time = 4000;
   trample_constant = 0.0001f;
   push_rate = 2000;
+  network.initializeNN();
 
   exit_location.set(0,0);
 
@@ -146,6 +147,7 @@ void Simulation::update(int frame_time, input inputs)
     visible_information test = applyPerception(focus_human);
     printf("seeing %d walls.\n", test.n_walls);
     printf("seeing %d humans.\n", test.n_people);*/
+    visible_information information = applyPerception(focus_human);
     updateFallen();
     moveHumans(frame_time);
   }
