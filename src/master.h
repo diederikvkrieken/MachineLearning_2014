@@ -21,6 +21,7 @@ class Master
     bool init();
     void run();
     void wait(Uint32 frame_length);
+    void outputFPS(Uint32 frame_length);
     void quit();
     void handleInput();
     void resetInputs();
@@ -45,7 +46,11 @@ class Master
     bool running;
     input inputs;           // User input each frame
 
-    int max_fps;
+    bool output_fps;        // If frames per second should be displayed in the console
+    int max_fps,
+        frame_counter,
+        frame_time_counter;
+    int fps_output_rate;    // Every how many ms the FPS should be displayed
     Timer frame_timer;
 
     Simulation simulation;

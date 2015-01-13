@@ -27,7 +27,7 @@ void Simulation::init(Master *master_ptr)
   vision_alpha = 50;
   chance_collision_fall = 0.5f;
   standup_time = 4000;
-  trample_constant = 0.0001f;
+  trample_constant = 0.00005f;
   push_rate = 2000;
 
   exit_location.set(0,0);
@@ -71,6 +71,7 @@ void Simulation::fillBuilding()
       new_human.ID = people.size();
       new_human.gender = MALE;
       new_human.status = HEALTHY;
+      new_human.escaped = false;
       new_human.push_time_out.start();
       new_human.trample_status = 0.0f;
       new_human.panic = default_panic;
@@ -155,7 +156,8 @@ void Simulation::update(int frame_time, input inputs)
 
   for(unsigned int i=0; i < people.size(); i++)
   {
-    drawHuman(people[i]);
+    if(!people[i].escaped )
+    { drawHuman(people[i]); }
   }
 
   // Convert surface to texture
@@ -235,12 +237,12 @@ void Simulation::moveHumans(int frame_time)
     human *h = &people[i];
 
     // Don't do anything with disabled people
-    if(h->status == FALLEN || h->status == DEAD)
+    if(h->escaped || h->status == FALLEN || h->status == DEAD)
     { continue; }
 
     // Detect collisions
-    float distance;
-    human *collided = humanCollision(h, &distance);
+    float overlap;
+    human *collided = humanCollision(h, &overlap);
     if(collided != NULL)
     {
       // Has collided with a human
@@ -250,7 +252,8 @@ void Simulation::moveHumans(int frame_time)
       {
         if(collided->status == FALLEN)
         {
-          /** TODO: trample() **/
+          // Hurt the human lying on the ground
+          trample(frame_time, collided, h, -overlap);
         }
         else if(collided->status == HEALTHY &&
                 ((computeChance(getPushChance(h), 100) && h->push_time_out.getTime() > push_rate) ||  // Check if one of them wants to push
@@ -286,6 +289,9 @@ void Simulation::moveHumans(int frame_time)
     // Calculate new position based on frame time and direction
     h->previous_position = h->position;
     h->position = h->position + h->direction * frame_time;
+    // Check if still in the building
+    if(!humanInBuilding(h))
+    { h->escaped = true; }
   }
 }
 
@@ -303,6 +309,7 @@ void Simulation::updateFallen()
       {
         h->lying.stop();
         h->lying.reset();
+        h->trample_status = 0.0f;
         h->status = HEALTHY;
       }
     }
@@ -311,6 +318,7 @@ void Simulation::updateFallen()
 
 void Simulation::push(human *a, human *b)
 {
+  /** TODO: add speed factor **/
   float a_score, b_score; // The human with the highest score wins
   float a_advantage, b_advantage; // Which human has advantage related to position and direction
   float height_weight, radius_weight, panic_weight, direction_weight;
@@ -355,6 +363,19 @@ void Simulation::push(human *a, human *b)
   {
     a->status = FALLEN;
     a->lying.start();
+  }
+}
+
+void Simulation::trample(int frame_time, human *fallen, human *treading, float overlap)
+{
+  // Trampling goes faster if the two humans overlap more
+  // weight is between [0,1]
+  float overlap_weight = overlap / (float)(fallen->radius + treading->radius);
+
+  fallen->trample_status += frame_time * treading->radius * trample_constant * overlap_weight;
+  if(fallen->trample_status >= 1.0f)
+  {
+    fallen->status = DEAD;
   }
 }
 
@@ -676,6 +697,10 @@ human *Simulation::humanCollision(human *target, float *distance)
 {
   for(unsigned int i=0; i < people.size(); i++)
   {
+    // Only check active humans
+    if(target->escaped)
+    { continue; }
+
     // Don't check self-collisions
     if(target->ID == people[i].ID)
     { continue; }
@@ -718,6 +743,14 @@ bool Simulation::hitsWall(human *target, bool include_exit)
     if(distancePointToLineSegment(target->position, w1, w2) < (float)target->radius)
     { return true; }
   }
+  return false;
+}
+
+bool Simulation::humanInBuilding(human *h)
+{
+  vector<dim2> walls_vector = convertPixelToDim2(wall_vertices);
+  if(pointInPolygon(h->position, walls_vector))
+  { return true; }
   return false;
 }
 
