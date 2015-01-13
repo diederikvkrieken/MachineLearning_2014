@@ -1,26 +1,35 @@
 #include "Neural.h"
 
-void NN::init()
-{
-
-}
-
 void NN::initializeNN()
 {
   n_layers = 1;
   n_input = 26;
   n_hidden = 33;
   n_output = 3;
+
+  /** Parameters of the particle swarm **/
+  //youtube video gives optimal range 20-40
+  maxEpoch = 1000;
+  nParticles = 20;
+  /** x_max x_min v_max v_min **/
+  x_max = 10;
+  x_min = -10;
+  v_max = 1;
+  v_min = -1;
+  precision = 0.001; // Precision for randomFloat function
+  c1 = 1.4;
+  c2 = 1.4;
+  w = 1.4;
+  /*******************************************************/
+  // Allocate neural network
   nHL.assign(n_hidden,0);
   bHL.assign(n_hidden,0);
   nOL.assign(n_output,0);
   bOL.assign(n_output,0);
   nIL.assign(n_input,0);
-  maxEpoch = 1000;
-  nParticles = 20;
-
   // Allocate size
   vector<float> inside_vector;
+  // From hidden to input, i->j
   for(int i=0; i < n_hidden; i++)
   {
     inside_vector.assign(n_input,0);
@@ -46,27 +55,12 @@ void NN::initializeNN()
     }
   }
 
-
-  /** Parameters of the particle swarm **/
-  /** x_max x_min v_max v_min **/
-  float x_max = 10;
-  float x_min = -10;
-  float v_max = 1;
-  float v_min = -1;
-  //youtube video gives optimal range 20-40
-  float precision = 0.001;
-  float c1 = 1.4;
-  float c2 = 1.4;
-  float w = 1.4;
-  float min_error = 0.1;
-
   //number of weights+bias
   int nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
-  /** TO-DO best global postion vector klopt zo?**/
-  //best_global_position = 0;
   /** TO-DO maxValue Controleren **/
   float best_global_error = 100000000;
-  // Allocate size
+
+  // Allocate particles
   vector<float> inside_vector;
   for(int i=0; i < nParticles; i++)
   {
@@ -91,18 +85,19 @@ void NN::initializeNN()
   }
 }
 
-void NN::trainNN(vector <int> resultaat)
+void NN::trainNN(vector <int> result)
 {
+  //Check for best error result
   for(int i=0; i < nParticles; i++)
   {
-    if (resultaat[i] < p_be[i])
+    if (result[i] < p_be[i])
     {
-      p_be[i] = resultaat[i];
+      p_be[i] = result[i];
       p_bx[i] = p_x[i];
     }
-    if (resultaat[i] < best_global_error)
+    if (result[i] < best_global_error)
     {
-      best_global_error = resultaat[i];
+      best_global_error = result[i];
       best_global_position = p_x[i];
     }
   }
@@ -134,7 +129,7 @@ void NN::trainNN(vector <int> resultaat)
 void NN::positionToWeights(int i)
 {
   vector<float> position = p_x[i];
-  unsigned int nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;;
+  unsigned int nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
   if (position.size() != nW)
   {
     /** TO-DO error **/
