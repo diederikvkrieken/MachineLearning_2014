@@ -20,7 +20,7 @@ void NN::initializeNN()
   precision = 0.001; // Precision for randomFloat function
   c1 = 1.4;
   c2 = 1.4;
-  w = 1.4;
+  w = 0.8;
   /*******************************************************/
   // Allocate neural network
   nHL.assign(n_hidden,0);
@@ -194,7 +194,6 @@ vector<float> NN::runNN(vector<float> input)
     if (input.size()!= (unsigned int)n_input)
     {
         /** TO-DO length check doen **/
-        //length werkt nog niet!
         //throw exception;
     }
     //Calculate Hiddenlayer nodes
