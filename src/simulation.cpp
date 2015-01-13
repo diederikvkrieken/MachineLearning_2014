@@ -3,12 +3,14 @@
 #include "master.h"
 #include "ui.h"
 
-void Simulation::init(Master *master_ptr)
+void Simulation::init(Master *master_ptr, Machine *machine_ptr)
 {
   master = master_ptr;
-  ui = master->getUI();
+  ui = machine->getUI();
+  network = machine->getNetwork();
   renderer = master->getRenderer();
 
+  total_escape_time = 0;
   min_radius = 4;
   max_radius = 12;
   min_age = 2;
@@ -29,7 +31,8 @@ void Simulation::init(Master *master_ptr)
   standup_time = 4000;
   trample_constant = 0.00005f;
   push_rate = 2000;
-//  network.initializeNN();
+  max_frames = 100000;
+  frame_counter = 0;
 
   exit_location.set(0,0);
 
@@ -59,7 +62,7 @@ void Simulation::init(Master *master_ptr)
 void Simulation::fillBuilding()
 {
   int tries = 0;
-  
+
   // Reset humans
   people.clear();
 
@@ -75,6 +78,7 @@ void Simulation::fillBuilding()
       new_human.gender = MALE;
       new_human.status = HEALTHY;
       new_human.escaped = false;
+      new_human.escape_time = 0;
       new_human.push_time_out.start();
       new_human.trample_status = 0.0f;
       new_human.panic = default_panic;
@@ -141,18 +145,25 @@ void Simulation::update(int frame_time, input inputs)
   else if(status == SPAWNING)
   {
     fillBuilding();
+    total_escape_time = 0;
+    frame_counter = 0;
+    start_time = SDL_GetTicks();
     status = RUNNING;
   }
   else if(status == RUNNING)
   {
-    /*// debug
-    focus_human->direction.x = 0.02;
-    focus_human->direction.y = 0.02;
-    visible_information test = applyPerception(focus_human);
-    printf("seeing %d walls.\n", test.n_walls);
-    printf("seeing %d humans.\n", test.n_people);*/
+    if(frame_counter >= max_frames)
+    {
+      // Simulation has ended
+      status = STOPPED;
+      calculateTotalTime();
+      return;
+    }
+    updateActions();
     updateFallen();
     moveHumans(frame_time);
+
+    frame_counter++;
   }
 
   // Draw walls
@@ -212,24 +223,45 @@ visible_information Simulation::applyPerception(human *h)
   return view;
 }
 
-/*void Simulation::testSim()
+int Simulation::getResult()
 {
-  vector<dim2> test_pos, in_polygon, polygon;
-  polygon = convertPixelToDim2(wall_vertices);
-  test_pos.push_back(makeDim2(400,400));
-  test_pos.push_back(makeDim2(800,400));
-  test_pos.push_back(makeDim2(700,500));
-  test_pos.push_back(makeDim2(20,80));
+  if(status != STOPPED)
+  { return -1; }
+  return total_escape_time;
+}
 
-  for(unsigned int i=0; i < test_pos.size(); i++)
+void Simulation::calculateTotalTime()
+{
+  Uint32 end_time = SDL_GetTicks();
+  // See which humans have not escaped and give them max time
+  for(unsigned int i=0; i < people.size(); i++)
   {
-    if(pointInPolygon(test_pos[i], polygon))
-    { placeHuman(test_pos[i], MALE, 40, 125, 7, HEALTHY); }
+    human *h = &people[i];
+
+    if(!h->escaped)
+    {
+      h->escape_time = end_time - start_time;
+    }
+    // Add to total
+    total_escape_time += h->escape_time;
   }
-}*/
+}
 
 void Simulation::handleInput(int frame_time, input inputs)
 {
+
+}
+
+void Simulation::updateActions()
+{
+  for(unsigned int i=0; i < people.size(); i++)
+  {
+    human *h = &people[i];
+
+    human_action action = machine->queryNetwork(createNNInputs(h, applyPerception(h)));
+    h->direction = action.direction;
+    h->panic = action.panic;
+  }
 }
 
 void Simulation::moveHumans(int frame_time)
@@ -294,7 +326,10 @@ void Simulation::moveHumans(int frame_time)
     h->position = h->position + h->direction * frame_time;
     // Check if still in the building
     if(!humanInBuilding(h))
-    { h->escaped = true; }
+    {
+      h->escaped = true;
+      h->escape_time = SDL_GetTicks() - start_time;
+    }
   }
 }
 
@@ -855,6 +890,33 @@ dim2 Simulation::determineExit()
   end_point = convertPixelToDim2(wall_vertices[0]);
   dim2 direction = end_point - start_point;
   return start_point + direction * 0.5f;
+}
+
+vector<float> Simulation::createNNInputs(human *h, visible_information info)
+{
+  vector<float> result;
+  result.push_back(info.closest_wall_distance);
+  result.push_back(info.exit_distance);
+  result.push_back(info.mean_age);
+  result.push_back(info.mean_direction.x);
+  result.push_back(info.mean_direction.y);
+  result.push_back(info.mean_height);
+  result.push_back(info.mean_panic);
+  result.push_back(info.mean_radius);
+  result.push_back(info.n_people);
+  result.push_back(info.n_walls);
+  result.push_back(info.var_age);
+  result.push_back(info.var_direction.x);
+  result.push_back(info.var_direction.y);
+  result.push_back(info.var_height);
+  result.push_back(info.var_panic);
+  result.push_back(info.var_radius);
+  result.push_back(h->direction.x);
+  result.push_back(h->direction.y);
+  result.push_back(h->age);
+  result.push_back(h->height);
+  result.push_back(h->panic);
+  result.push_back(h->radius);
 }
 
 

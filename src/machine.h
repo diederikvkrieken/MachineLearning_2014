@@ -11,11 +11,15 @@ class Machine
 {
   public:
     void init(Master *master_ptr);
-    void run(int frame_time, input inputs);
+    bool run(int frame_time, input inputs);
     human_action queryNetwork(vector<float> nn_inputs);
+
+    UI *getUI() { return &ui; }
+    NN *getNetwork() { return network; }
   private:
     int current_particle;
-    
+    vector<int> time_results; // The simulation results (total escape time) for each particle
+
     Master *master;
     Simulation simulation;
     NN network;

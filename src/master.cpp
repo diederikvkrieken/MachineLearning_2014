@@ -130,7 +130,7 @@ void Master::run()
     // Clear screen
     SDL_RenderClear(renderer);
 
-    machine.run(last_frame_time, inputs);
+    running = machine.run(last_frame_time, inputs);
     /*simulation.update(last_frame_time, inputs);*/
 
     // Update screen

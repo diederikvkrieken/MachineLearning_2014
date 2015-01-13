@@ -28,9 +28,6 @@ class Master
     SDL_Surface *createEmptySurface(int width, int height);
     SDL_Texture *loadImage(string path);
 
-    Simulation *getSimulation() { return &simulation; }
-    UI *getUI() { return &ui; }
-
     SDL_Window *getWindow() { return window; }
     SDL_Renderer *getRenderer() { return renderer; }
     SDL_Texture *getMasterTexture() { return screen; }

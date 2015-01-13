@@ -12,7 +12,7 @@ using namespace std;
 class Simulation
 {
   public:
-    void init(Master *master_ptr);
+    void init(Master *master_ptr, Machine *machine_ptr);
     void fillBuilding();
     void update(int frame_time, input inputs);
 
@@ -31,6 +31,7 @@ class Simulation
     void setMinHeight(int h) { min_height = h; }
     void setMinAge(int a) { min_age = a; }
     void setMaxAge(int a) { max_age = a; }
+    void setMaxFrames(int a) { max_frames = a; }
 
     visible_information applyPerception(human *h);
     simulation_status getStatus() { return status; }
@@ -39,10 +40,10 @@ class Simulation
     string getStatusText(simulation_status s) { return status_text[s]; }
     SDL_Surface *getScreen() { return screen; }
 
-    // Debug
-    void testSim();
   private:
+    void calculateTotalTime();
     void handleInput(int frame_time, input inputs);
+    void updateActions();
     void moveHumans(int frame_time);
     void updateFallen();
     void push(human *a, human *b);
@@ -73,6 +74,7 @@ class Simulation
     void getPanicMeanVariance(vector<human *> humans, float *mean, float *variance);
     void getDirectionMeanVariance(vector<human *> humans, dim2 *mean, dim2 *variance);
     dim2 determineExit();
+    vector<float> createNNInputs(human *h, visible_information info);
 
     SDL_Surface *screen, *walls;
     SDL_Texture *vision_cone;
@@ -86,6 +88,10 @@ class Simulation
     map<simulation_status, string> status_text;
 
     simulation_status status; // Run status of the simulation
+    Uint32 total_escape_time,
+           start_time;
+    int max_frames, // Simulation is allowed to run for this many frames before quitting
+        frame_counter;
     bool load_walls;  // Whether a wall configuration file must be loaded
     bool single_cone; // Whether just the vision cone of the focused human should be drawn
     int n_people;
@@ -98,7 +104,7 @@ class Simulation
           default_vision_range;
     float default_fov;  // The default field of view of a person, in degrees
     float default_panic;
-    Uint8 vision_alpha; // The alhpa channel value of the vision cone
+    Uint8 vision_alpha; // The alpha channel value of the vision cone
     float chance_collision_fall;  // The chance that somebody will fall if they lose a push impact
     float trample_constant; // The amount of trample status added times radius (per ms)
     Uint32 push_rate; // How many ms must be between each push from one person
@@ -110,8 +116,9 @@ class Simulation
     SDL_Renderer *renderer;
 
     Master *master;
+    Machine *machine;
     UI *ui;
-//    NN network;
+    NN *network;
 
 };
 
