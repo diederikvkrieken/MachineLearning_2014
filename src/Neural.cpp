@@ -6,6 +6,7 @@ void NN::initializeNN()
   n_input = 26;
   n_hidden = 33;
   n_output = 3;
+  input_text = "walls1.csv";
 
   /** Parameters of the particle swarm **/
   //youtube video gives optimal range 20-40
@@ -87,6 +88,19 @@ void NN::initializeNN()
 
 void NN::trainNN(vector <int> result)
 {
+  // write results
+  ofstream results;
+  myfile.open(input_text, std::ios::app);
+  if (myfile.is_open())
+  {
+    for(int i=0; i < result.size(); i++)
+    {
+      myfile << result[i] << "; ";
+    }
+    myfile << "\n";
+    myfile.close();
+  }
+  else cout << "Unable to open file";
   //Check for best error result
   for(int i=0; i < nParticles; i++)
   {

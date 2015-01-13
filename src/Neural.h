@@ -42,6 +42,8 @@ class NN
           c1,
           c2,
           w;
+
+    string input_text;
 };
 
 #endif // NEURAL_H
