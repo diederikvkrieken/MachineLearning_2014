@@ -45,6 +45,7 @@ class Simulation
     void moveHumans(int frame_time);
     void updateFallen();
     void push(human *a, human *b);
+    void trample(int frame_time, human *fallen, human *treading, float overlap);
     void createWalls(input *inputs);
     void updateWallSurface();
     void fillWallBackground();
@@ -62,6 +63,7 @@ class Simulation
     human *humanCollision(human *target, float *distance);
     bool collisionChecked(vector< vector<human *> > checked_collisions, human *a, human *b);
     bool hitsWall(human *target, bool include_exit);
+    bool humanInBuilding(human *h);
     vector<human *> visibleHumans(human *h);
     float getPushChance(human *h);
     void getAgeMeanVariance(vector<human *> humans, float *mean, float *variance);
@@ -97,7 +99,7 @@ class Simulation
     float default_panic;
     Uint8 vision_alpha; // The alhpa channel value of the vision cone
     float chance_collision_fall;  // The chance that somebody will fall if they lose a push impact
-    float trample_constant; // The amount of trample status added per (time * radius)
+    float trample_constant; // The amount of trample status added times radius (per ms)
     Uint32 push_rate; // How many ms must be between each push from one person
     Uint32 standup_time;  // Time in ms after which a fallen person will stand up again
     rgb colour_healthy, colour_fallen, colour_dead,

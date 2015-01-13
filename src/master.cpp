@@ -10,6 +10,10 @@ bool Master::init()
 
   // Maximum framerate
   max_fps = 120;
+  output_fps = true;
+  fps_output_rate = 2000;
+  frame_counter = 0;
+  frame_time_counter = 0;
 
   // Set resolution
   resolution.set(800,800);
@@ -130,6 +134,9 @@ void Master::run()
     // Update screen
     SDL_RenderPresent(renderer);
 
+    if(output_fps)
+    { outputFPS(last_frame_time); }
+
     wait(SDL_GetTicks() - frametime);
   }
 
@@ -141,6 +148,19 @@ void Master::wait(Uint32 frame_length)
   Uint32 min_time = 1000 / max_fps;
   if(frame_length < min_time)
   { SDL_Delay(min_time - frame_length); }
+}
+
+void Master::outputFPS(Uint32 frame_length)
+{
+  frame_counter++;
+  frame_time_counter += frame_length;
+  if(frame_time_counter >= fps_output_rate)
+  {
+    int fps = (frame_counter / (float)frame_time_counter) * 1000;
+    frame_counter = 0;
+    frame_time_counter = 0;
+    printf("FPS:\t %d\n", fps);
+  }
 }
 
 void Master::quit()

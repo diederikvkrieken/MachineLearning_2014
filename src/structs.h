@@ -189,6 +189,7 @@ struct human
   float vision_range; // How far someone can see ahead
   float fov;  // Field of view
   float panic; // Panic number between 0 (low panic) and 1 (high panic)
+  bool escaped;
   health_status status;
   float trample_status; // Value in [0,1] that indicates how close somebody is to dying from being trampled
   Timer lying;  // Time in ms indicating how long someone has been lying on the ground
