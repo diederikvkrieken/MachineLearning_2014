@@ -8,7 +8,6 @@ class NN
   public:
     void init();
     void initializeNN();
-
     void trainNN();
     float calculateError(vector<float> input);
     void positionToWeights(vector<float> postition);
@@ -35,7 +34,9 @@ class NN
     int n_input,
         n_hidden,
         n_output,
-        n_layers;
+        n_layers,
+        maxEpoch,
+        nParticles;
         //private:
 };
 

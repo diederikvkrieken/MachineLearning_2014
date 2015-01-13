@@ -29,7 +29,7 @@ void Simulation::init(Master *master_ptr)
   standup_time = 4000;
   trample_constant = 0.00005f;
   push_rate = 2000;
-  network.initializeNN();
+//  network.initializeNN();
 
   exit_location.set(0,0);
 
