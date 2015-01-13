@@ -111,7 +111,7 @@ class Simulation
 
     Master *master;
     UI *ui;
-    NN network;
+//    NN network;
 
 };
 
