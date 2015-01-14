@@ -4,15 +4,15 @@ void NN::initializeNN()
 {
   n_layers = 1;
   n_input = 22;
-  n_hidden = 33;
+  n_hidden = 5;
   n_output = 3;
   nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
-  input_text = "walls1.csv";
+  input_text = "result_30pp_cont.csv";
 
   /** Parameters of the particle swarm **/
   //youtube video gives optimal range 20-40
-  maxEpoch = 1000; // was 1000
-  nParticles = 20; //was 20
+  maxEpoch = 20; // was 1000
+  nParticles = 3; //was 20
   /** x_max x_min v_max v_min **/
   x_max = 1.0f;
   x_min = -1.0f;
@@ -224,3 +224,23 @@ vector<float> NN::runNN(vector<float> input)
     /*printf("\n");*/
     return nOL;
 }
+
+//void NN::wegschrijvenParticles(string text_name)
+//{
+//  // write results
+//  ofstream results;
+//  results.open(text_name.c_str(), std::ios::app);
+//  if (results.is_open())
+//  {
+//    for(unsigned int i=0; i < p_x.size(); i++)
+//    {
+//      results << "particle: " << p_x[i] <<"; ";
+//      for(int j=0; j < p_x[i].size(); j++)
+//      {
+//        results << p_x[i][j] << "; ";
+//      }
+//      results << "\n";
+//    }
+//    results.close();
+//  }
+//}
