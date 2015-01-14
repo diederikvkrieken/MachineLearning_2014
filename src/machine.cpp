@@ -31,16 +31,16 @@ bool Machine::run(int frame_time, input inputs)
     // Get and store the result
     int result_time = simulation.getResult();
     time_results.push_back(result_time);
-
+    printf("epoch:\t%d.\t Particle:\t%d\n", current_epoch, current_particle);
     current_particle++;
     if(current_particle >= network.nParticles)
     {
-      // Train the networks after simulation ends
-      printf("epoch++\n");
+      // Train the networks after simulation ends, particle optimalization
+      /*printf("epoch++\n");
       for(unsigned int i=0; i < time_results.size(); i++)
       {
         printf("time %d: %d\n", i, time_results[i]);
-      }
+      }*/
       network.trainNN(time_results);
       time_results.clear();
       current_particle = 0;

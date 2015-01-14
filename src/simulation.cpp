@@ -206,11 +206,10 @@ visible_information Simulation::applyPerception(human *h)
   view.closest_wall_distance = -1.0f;  // No wall in sight
   float facing_angle = toDegrees(radiansPositiveOnly(computeAngle(h->direction, makeDim2(0.0f, 0.0f))));
   // Check walls
-  for(unsigned int i=0; i < wall_vertices.size(); i++)
+  for(unsigned int i=0; i < wall_vertices.size() - 1; i++)
   {
     dim2 current = convertPixelToDim2(wall_vertices[i]);
-    pixel n = (i < wall_vertices.size() - 1) ? wall_vertices[i+1] : wall_vertices[0];
-    dim2 next = convertPixelToDim2(n);
+    dim2 next = convertPixelToDim2(wall_vertices[i+1]);
 
     // See if the person can see this wall section
     float distance;

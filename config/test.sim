@@ -1,6 +1,6 @@
-walls_file:square.wall
+walls_file:cont.sim
 single_cone:1
-n_people:100
+n_people:30
 min_radius:4
 max_radius:8
 min_vision_range:35
@@ -11,4 +11,4 @@ min_height:40
 max_height:205
 min_age:2
 max_age:98
-max_simulation_frames:5000
+max_simulation_frames:1500
