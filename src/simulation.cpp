@@ -324,7 +324,7 @@ void Simulation::moveHumans(int frame_time)
         continue;
       }
     }
-    else if(hitsWall(h, false))
+    if(hitsWall(h, false))
     {
        h->position = h->previous_position;
        // Don't move [h]
