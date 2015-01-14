@@ -12,6 +12,7 @@
 #include "structs.h"
 #include "functions.h"
 
+#include "machine.h"
 #include "simulation.h"
 #include "ui.h"
 
@@ -32,6 +33,9 @@ class Master
     SDL_Renderer *getRenderer() { return renderer; }
     SDL_Texture *getMasterTexture() { return screen; }
     dim2 getResolution() { return resolution; }
+
+    Machine *getMachine() { return &machine; }
+    Simulation *getSimulation() { return machine.getSimulation(); }
   private:
     SDL_Renderer *renderer;
     SDL_Window *window;
@@ -46,9 +50,12 @@ class Master
     bool output_fps;        // If frames per second should be displayed in the console
     int max_fps,
         frame_counter,
-        frame_time_counter;
-    int fps_output_rate;    // Every how many ms the FPS should be displayed
+        frame_time_counter,
+        fps_output_rate,
+        total_fps;    // Every how many ms the FPS should be displayed
     Timer frame_timer;
+
+    Machine machine;
 };
 
 #endif // MASTER_H

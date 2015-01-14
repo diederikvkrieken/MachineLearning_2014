@@ -1,14 +1,16 @@
 #ifndef NEURAL_H
 #define NEURAL_H
 
+#include <fstream>
+
 #include "functions.h"
 
 class NN
 {
   public:
     void initializeNN();
-    void trainNN();
-    void positionToWeights(vector<float> postition);
+    void trainNN(vector <int> result);
+    void positionToWeights(int particle);
     float activationFunction(float input ,float bias);
     vector<float> runNN(vector<float> input);
 
@@ -32,7 +34,7 @@ class NN
         n_layers,
         maxEpoch,
         nParticles;
-        //private:
+    unsigned int nW; // number of weights per particle
 
     float x_max,
           x_min,
@@ -42,6 +44,7 @@ class NN
           c1,
           c2,
           w;
+    float best_global_error;
 
     string input_text;
 };

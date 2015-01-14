@@ -3,24 +3,25 @@
 void NN::initializeNN()
 {
   n_layers = 1;
-  n_input = 26;
+  n_input = 22;
   n_hidden = 33;
   n_output = 3;
+  nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
   input_text = "walls1.csv";
 
   /** Parameters of the particle swarm **/
   //youtube video gives optimal range 20-40
-  maxEpoch = 1000;
-  nParticles = 20;
+  maxEpoch = 1000; // was 1000
+  nParticles = 20; //was 20
   /** x_max x_min v_max v_min **/
-  x_max = 10;
-  x_min = -10;
-  v_max = 1;
-  v_min = -1;
-  precision = 0.001; // Precision for randomFloat function
-  c1 = 1.4;
-  c2 = 1.4;
-  w = 0.8;
+  x_max = 1.0f;
+  x_min = -1.0f;
+  v_max = 0.1f;
+  v_min = -0.1f;
+  precision = 0.001f; // Precision for randomFloat function
+  c1 = 1.4f;
+  c2 = 1.4f;
+  w = 0.8f;
   /*******************************************************/
   // Allocate neural network
   nHL.assign(n_hidden,0);
@@ -47,34 +48,33 @@ void NN::initializeNN()
   {
     for(int j=0; j < n_input; j++)
     {
-      wHL[i][j] = randInt(0, 100) / 10.0;
+      wHL[i][j] = randInt(-100, 100) / 100.0;
     }
     // Initialise output-hidden weights
     for(int j=0; j < n_output; j++)
     {
-      wOL[j][i] = randInt(0, 100) / 10.0;
+      wOL[j][i] = randInt(-100, 100) / 100.0;
     }
   }
 
   //number of weights+bias
-  int nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
   /** TO-DO maxValue Controleren **/
-  float best_global_error = 100000000;
+  best_global_error = 100000000;
 
   // Allocate particles
-  vector<float> inside_vector;
   for(int i=0; i < nParticles; i++)
   {
     inside_vector.assign(nW,0);
     p_x.push_back(inside_vector);
     p_v.push_back(inside_vector);
+    p_bx.push_back(inside_vector);
   }
   // swarm initialization
   // initialise each Particle in the swarm with random positions and velocities
   for (int i = 0; i<nParticles;i++)
   {
     //Particle initialization
-    for (int j = 0; j<nW;j++)
+    for (unsigned int j = 0; j<nW;j++)
     {
       // particle position:
       // randomPosition = (hi - lo) * random_double + lo; (waarde tussen max en min)
@@ -82,25 +82,27 @@ void NN::initializeNN()
       // particle velocity:
       // randomVelocity[j] = (hi - lo) * rnd.NextDouble() + lo;
       p_v[i][j] = (v_max - v_min) * randomFloat(0, 1, precision) + v_min;
+      /*printf("p_x %d %d = %.2f\n", i, j, p_x[i][j]);
+      printf("p_v %d %d = %.2f\n", i, j, p_v[i][j]);*/
     }
   }
+  p_be.assign(nParticles,9999999);
 }
 
 void NN::trainNN(vector <int> result)
 {
   // write results
   ofstream results;
-  myfile.open(input_text, std::ios::app);
-  if (myfile.is_open())
+  results.open(input_text.c_str(), std::ios::app);
+  if (results.is_open())
   {
-    for(int i=0; i < result.size(); i++)
+    for(unsigned int i=0; i < result.size(); i++)
     {
-      myfile << result[i] << "; ";
+      results << result[i] << "; ";
     }
-    myfile << "\n";
-    myfile.close();
+    results << "\n";
+    results.close();
   }
-  else cout << "Unable to open file";
   //Check for best error result
   for(int i=0; i < nParticles; i++)
   {
@@ -119,7 +121,7 @@ void NN::trainNN(vector <int> result)
   // Update particles
   for(int i=0; i < nParticles; i++)
   {
-    for (int j = 0; j<nW;j++)
+    for(unsigned int j = 0; j<nW;j++)
     {
       // 1. new velocity
       // new velocity = (w * current_v)+(c1 * r1 * p_best_pos - current_pos)+(c2 * r2 * global_best_pos - current_pos)
@@ -128,27 +130,24 @@ void NN::trainNN(vector <int> result)
       + (c2*randomFloat(0, 1, precision)*(best_global_position[j]-p_x[i][j]));
 
       // Ensure smallest/largest
-      clamp(*p_v[i][j], v_min, v_max);
+      clamp(&p_v[i][j], v_min, v_max);
 
       // 2. compute new position with the new velocity
       // Position = current_pos + new velocity;
       p_x[i][j] = p_x[i][j] + p_v[i][j];
 
       // Ensure smallest/largest
-      clamp(*p_x[i][j], x_min, x_max)
+      clamp(&p_x[i][j], x_min, x_max);
     }
   }
 }
 
-void NN::positionToWeights(int i)
+void NN::positionToWeights(int particle)
 {
-  vector<float> position = p_x[i];
-  unsigned int nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
+  vector<float> position = p_x[particle];
   if (position.size() != nW)
   {
-    /** TO-DO error **/
-    //throw exception??
-    //error!!
+      fprintf(stderr, "[NN.positionToWeights] length of position != nW.\n");
   }
   int i=0;
   for(int j=0; j < n_hidden; j++)
@@ -184,17 +183,18 @@ float NN::activationFunction(float input ,float bias)
 {
 	// sigmoid function
 	float x = input + bias;
-	return 1/(1+expf(-x));
+	/*printf("input: %.2f\n", input);
+	printf("bias: %.2f\n", bias);*/
+	/*return 1/(1+expf(-x));*/
 	// tanh function
-	// return tanh(x);
+	return tanhf(x);
 }
 
 vector<float> NN::runNN(vector<float> input)
 {
     if (input.size()!= (unsigned int)n_input)
     {
-        /** TO-DO length check doen **/
-        //throw exception;
+        fprintf(stderr, "[NN.runNN] length of input != n_input.\n");
     }
     //Calculate Hiddenlayer nodes
     for(int i = 0; i<n_hidden;i++)
@@ -202,19 +202,25 @@ vector<float> NN::runNN(vector<float> input)
         nHL[i]=0;
         for(int j = 0;j<n_input;j++)
         {
-            nHL[i] = nHL[i] + wHL[i][j]*input[j];
+            /* printf("wHL[i][j]: %.2f\n", wHL[i][j]);
+            printf("input[j]: %.2f\n", input[j]);*/
+            nHL[i] += wHL[i][j]*input[j];
         }
         nHL[i] = activationFunction(nHL[i],bHL[i]);
+        /*printf("nHL %d = %.2f -- ", i, nHL[i]);*/
     }
+    /*printf("\n");*/
     //Calcute output layer nodes
     for(int i = 0; i<n_output;i++)
     {
         nOL[i]=0;
         for(int j = 0;j<n_hidden;j++)
         {
-            nOL[i] = nOL[i] + wOL[i][j]*nHL[j];
+            nOL[i] += wOL[i][j]*nHL[j];
         }
         nOL[i] = activationFunction(nOL[i],bOL[i]);
+        /*printf("output %d = %.2f -- ", i, nOL[i]);*/
     }
+    /*printf("\n");*/
     return nOL;
 }

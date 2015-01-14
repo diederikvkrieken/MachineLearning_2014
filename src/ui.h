@@ -20,6 +20,7 @@ class UI
     void update(input *inputs);
 
     void setStatus(simulation_status s) { status = s; }
+    simulation_status status;
   private:
     void readConfigFile(string path);
     void readWalls(string path);
@@ -37,7 +38,6 @@ class UI
          text_offset;
     SDL_Rect save_button, ignore_button;
 
-    simulation_status status;
     string walls_file; // Which walls configuration file should be read
 
     SDL_Texture *box_surface,

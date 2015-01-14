@@ -2,11 +2,14 @@
 
 #include "master.h"
 #include "ui.h"
+#include "machine.h"
 
 void Simulation::init(Master *master_ptr, Machine *machine_ptr)
 {
   master = master_ptr;
+  machine = machine_ptr;
   ui = machine->getUI();
+
   network = machine->getNetwork();
   renderer = master->getRenderer();
 
@@ -200,7 +203,7 @@ visible_information Simulation::applyPerception(human *h)
   view.exit_distance = computeDistance(exit_location, h->position); // Straight-line distance
 
   view.n_walls = 0;
-  view.closest_wall_distance = 500000.0f;  // No wall in sight
+  view.closest_wall_distance = -1.0f;  // No wall in sight
   float facing_angle = toDegrees(radiansPositiveOnly(computeAngle(h->direction, makeDim2(0.0f, 0.0f))));
   // Check walls
   for(unsigned int i=0; i < wall_vertices.size(); i++)
@@ -215,7 +218,7 @@ visible_information Simulation::applyPerception(human *h)
     {
       view.n_walls++;
       // Check if this wall is closer than others
-      if(distance < view.closest_wall_distance)
+      if(distance < view.closest_wall_distance && distance >= 0.0f)
       { view.closest_wall_distance = distance; }
     }
   }
@@ -258,8 +261,15 @@ void Simulation::updateActions()
   {
     human *h = &people[i];
 
-    human_action action = machine->queryNetwork(createNNInputs(h, applyPerception(h)));
+    vector<float> nn_inputs = createNNInputs(h, applyPerception(h));
+    /*printf("human idx: %d\n", i);
+    for(unsigned int j=0; j < nn_inputs.size(); j++)
+    {
+      printf("input %d = %.2f\n", j, nn_inputs[j]);
+    }*/
+    human_action action = machine->queryNetwork(nn_inputs);
     h->direction = action.direction;
+    /*printDim2("direction: ", h->direction);*/
     h->panic = action.panic;
   }
 }
@@ -917,6 +927,8 @@ vector<float> Simulation::createNNInputs(human *h, visible_information info)
   result.push_back(h->height);
   result.push_back(h->panic);
   result.push_back(h->radius);
+
+  return result;
 }
 
 

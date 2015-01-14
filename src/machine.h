@@ -15,9 +15,12 @@ class Machine
     human_action queryNetwork(vector<float> nn_inputs);
 
     UI *getUI() { return &ui; }
-    NN *getNetwork() { return network; }
+    NN *getNetwork() { return &network; }
+    Simulation *getSimulation() { return &simulation; }
+    SDL_Surface *getScreen() { return simulation.getScreen(); }
   private:
-    int current_particle;
+    int current_particle,
+        current_epoch;
     vector<int> time_results; // The simulation results (total escape time) for each particle
 
     Master *master;

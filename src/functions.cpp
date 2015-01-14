@@ -813,6 +813,9 @@ bool pointInPolygon(dim2 point, vector<dim2> polygon)
 
 float calculateMean(vector<float> a)
 {
+  if(a.size() == 0)
+  { return 0.0f; }
+
   float mean = 0.0f;
   for(unsigned int i=0; i < a.size(); i++)
   {
@@ -824,10 +827,13 @@ float calculateMean(vector<float> a)
 /** http://www.wikihow.com/Calculate-Variance **/
 float calculateVariance(vector<float> a, float mean)
 {
+  if(a.size() <= 1)
+  { return 0.0f; }
+
   float var = 0;
   for(unsigned int i=0; i < a.size(); i++)
   {
-    var += sqrtf(mean - a[i]);
+    var += pow((mean - a[i]),2);
   }
   return var / (a.size() - 1);
 }

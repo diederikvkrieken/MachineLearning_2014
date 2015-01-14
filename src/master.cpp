@@ -9,11 +9,12 @@ bool Master::init()
   srand(time(NULL));
 
   // Maximum framerate
-  max_fps = 120;
+  max_fps = 10000;
   output_fps = true;
   fps_output_rate = 2000;
   frame_counter = 0;
   frame_time_counter = 0;
+  total_fps = 0;
 
   // Set resolution
   resolution.set(800,800);
@@ -103,7 +104,7 @@ void Master::run()
   ui.init(this);*/
 
   // Make main texture from main surface
-  screen = SDL_CreateTextureFromSurface(renderer, simulation.getScreen());
+  screen = SDL_CreateTextureFromSurface(renderer, machine.getScreen());
 
   running = true;
 
@@ -123,6 +124,9 @@ void Master::run()
 
     resetInputs();
     handleInput();
+
+    if(!running)
+    { return; }
 
     SDL_SetRenderTarget(renderer, NULL);
     // Set background color
@@ -159,9 +163,10 @@ void Master::outputFPS(Uint32 frame_length)
   if(frame_time_counter >= fps_output_rate)
   {
     int fps = (frame_counter / (float)frame_time_counter) * 1000;
+    total_fps += frame_counter;
     frame_counter = 0;
     frame_time_counter = 0;
-    printf("FPS:\t %d\n", fps);
+    printf("FPS:\t %d.\t Total FPS:\t %d\n", fps, total_fps);
   }
 }
 

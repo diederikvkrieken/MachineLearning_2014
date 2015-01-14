@@ -5,6 +5,7 @@
 #include "Neural.h"
 
 class Master;
+class Machine;
 class UI;
 
 using namespace std;
