@@ -63,9 +63,10 @@ class Simulation
     void drawWalls();
     void placeHuman(dim2 position, dim2 direction, human_gender gender, int age, int height, int radius, float vision_range, health_status status); /** Unused **/
 
-    human *humanCollision(human *target, float *distance);
+    vector<human *> humanCollision(human *target, float *distance);
     bool collisionChecked(vector< vector<human *> > checked_collisions, human *a, human *b);
     bool hitsWall(human *target, bool include_exit);
+    bool isFrontHuman(human *h, vector<human *> collisions);
     bool humanInBuilding(human *h);
     vector<human *> visibleHumans(human *h);
     float getPushChance(human *h);

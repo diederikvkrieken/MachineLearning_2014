@@ -230,6 +230,11 @@ struct circle_surface
   SDL_Surface *dead;
 };
 
+struct grid_cell
+{
+  vector<human *> humans;
+};
+
 #endif
 
 

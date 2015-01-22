@@ -73,7 +73,7 @@ void Simulation::fillBuilding()
   while(people.size() < (unsigned int)n_people)
   {
     human new_human;
-    human *collided;
+    vector<human *> collided;
     do
     {
       /** TODO: gender is still static **/
@@ -111,7 +111,7 @@ void Simulation::fillBuilding()
       collided = humanCollision(&new_human, &distance);
 
       tries++;
-    } while(tries < max_placement_tries && collided != NULL);
+    } while(tries < max_placement_tries && collided.size() > 0);
 
     people.push_back(new_human);
 
@@ -287,39 +287,47 @@ void Simulation::moveHumans(int frame_time)
 
     // Detect collisions
     float overlap;
-    human *collided = humanCollision(h, &overlap);
-    if(collided != NULL)
+    vector<human *> collisions = humanCollision(h, &overlap);
+    if(collisions.size() > 0)
     {
       // Has collided with a human
-
-      // Handle pushing and trampling
-      if(!collisionChecked(checked_collisions, h, collided))
+      for(unsigned int j=0; j < collisions.size(); j++)
       {
-        if(collided->status == FALLEN)
+        human *collided = collisions[j];
+        // Handle pushing and trampling
+        if(!collisionChecked(checked_collisions, h, collided))
         {
-          // Hurt the human lying on the ground
-          trample(frame_time, collided, h, -overlap);
-        }
-        else if(collided->status == HEALTHY &&
-                ((computeChance(getPushChance(h), 100) && h->push_time_out.getTime() > push_rate) ||  // Check if one of them wants to push
-                 (computeChance(getPushChance(collided), 100) && collided->push_time_out.getTime() > push_rate)))
-        {
-          push(h, collided);
+          if(collided->status == FALLEN)
+          {
+            // Hurt the human lying on the ground
+            trample(frame_time, collided, h, -overlap);
+          }
+          else if(collided->status == HEALTHY &&
+                  ((computeChance(getPushChance(h), 100) && h->push_time_out.getTime() > push_rate) ||  // Check if one of them wants to push
+                   (computeChance(getPushChance(collided), 100) && collided->push_time_out.getTime() > push_rate)))
+          {
+            push(h, collided);
+          }
         }
       }
 
       // Update collision tracking
       vector<human *> human_pair;
-      human_pair.push_back(h);
-      human_pair.push_back(collided);
-      checked_collisions.push_back(human_pair);
+      for(unsigned int j=0; j < collisions.size(); j++)
+      {
+        human_pair.clear();
+        human_pair.push_back(h);
+        human_pair.push_back(collisions[j]);
+        checked_collisions.push_back(human_pair);
+      }
 
       // Check which human is in front
-      if(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0 &&
-         collided->status == HEALTHY)
+      if(isFrontHuman(h, collisions);
+      i/*f(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0 &&
+         collided->status == HEALTHY)*/
       {
         h->position = h->previous_position;
-        // [collided] is in front of [h]: don't move [h]
+        // One of [collisions] is in front of [h]: don't move [h]
         continue;
       }
     }
@@ -344,15 +352,23 @@ void Simulation::moveHumans(int frame_time)
 
 void Simulation::updateFallen()
 {
+  bool alive_collisions = false;
+  
   for(unsigned int i=0; i < people.size(); i++)
   {
     human *h = &people[i];
     if(h->status == FALLEN)
     {
       float distance;
-      human *collided = humanCollision(h, &distance);
+      vector<human *> collisions = humanCollision(h, &distance);
+      // See if any of the colliding humans are alive
+      for(int j=0; j < collisions.size(); j++)
+      {
+        if(collisions[i]->status == HEALTHY)
+        { alive_collisions = true; }
+      }
       if(h->lying.isStarted() && h->lying.getTime() > standup_time &&
-         (collided == NULL || collided->status != HEALTHY))  // The area is clear
+         (collisions.size() == 0 || !alive_collisions))  // The area is clear
       {
         h->lying.stop();
         h->lying.reset();
@@ -700,6 +716,9 @@ void Simulation::drawVision()
   for(unsigned int i=0; i < people.size(); i++)
   {
     human *indiv = &people[i];
+    
+    if(indiv->escaped)
+    { continue; } // Don't draw cones when human has disappeared
 
     if(single_cone && indiv != focus_human)
     { continue; } // Only draw focus human's cone
@@ -740,8 +759,9 @@ void Simulation::placeHuman(dim2 position, dim2 direction, human_gender gender, 
   people.push_back(individual);
 }
 
-human *Simulation::humanCollision(human *target, float *distance)
+vector<human *>  Simulation::humanCollision(human *target, float *distance)
 {
+  vector<human *> collided;
   for(unsigned int i=0; i < people.size(); i++)
   {
     // Only check active humans
@@ -755,9 +775,9 @@ human *Simulation::humanCollision(human *target, float *distance)
     *distance = detectCollisionCircle(people[i].position, people[i].radius, target->position, target->radius);
     // Check if circles overlap
     if(*distance < 0.0f)
-    { return &people[i]; }
+    { collided.push_back(&people[i]); }
   }
-  return NULL;
+  return colllided;
 }
 
 bool Simulation::collisionChecked(vector< vector<human *> > checked_collisions, human *a, human *b)
@@ -791,6 +811,22 @@ bool Simulation::hitsWall(human *target, bool include_exit)
     { return true; }
   }
   return false;
+}
+
+bool Simulation::isFrontHuman(human *h, vector<human *> collisions)
+{
+  for(int i=0; i < collisions.size(); i++)
+  {
+    human *collided = collisions[i];
+    
+    if(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0 &&
+       collided->status == HEALTHY)
+    {
+      // [collided] is in front
+      return false;
+    }
+  }
+  return true;
 }
 
 bool Simulation::humanInBuilding(human *h)
