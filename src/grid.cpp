@@ -3,11 +3,11 @@
 void Grid::init()
 {
   grid_root = 11;
-  
-  grid = new Grid*[grid_root];
+
+  grid = new grid_cell*[grid_root];
   for(int i=0; i < grid_root; i++)
   {
-    grid[i] = new Grid[grid_root];
+    grid[i] = new grid_cell[grid_root];
   }
 }
 

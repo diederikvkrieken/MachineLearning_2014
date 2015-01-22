@@ -50,6 +50,7 @@ void Simulation::init(Master *master_ptr, Machine *machine_ptr)
   status = MAIN_SCREEN;
   load_walls = false;
   single_cone = false;
+  drawing = true;
 
   // Set up base surface/texture
   screen = master->createEmptySurface(master->getResolution().x, master->getResolution().y);
@@ -125,8 +126,13 @@ void Simulation::fillBuilding()
 
 void Simulation::update(int frame_time, input inputs)
 {
-  // Reset background surface
-  SDL_FillRect(screen, NULL, SDL_MapRGBA(screen->format, 255,255,255, 255));
+  handleInput(frame_time, inputs);
+
+  if(drawing)
+  {
+    // Reset background surface
+    SDL_FillRect(screen, NULL, SDL_MapRGBA(screen->format, 255,255,255, 255));
+  }
 
   if(status == MAIN_SCREEN || status == STORING_WALLS)
   {
@@ -169,8 +175,11 @@ void Simulation::update(int frame_time, input inputs)
     frame_counter++;
   }
 
-  // Draw walls
-  drawWalls();
+  if(drawing)
+  {
+    // Draw walls
+    drawWalls();
+  }
 
   for(unsigned int i=0; i < people.size(); i++)
   {
@@ -178,14 +187,17 @@ void Simulation::update(int frame_time, input inputs)
     { drawHuman(people[i]); }
   }
 
-  // Convert surface to texture
-  SDL_UpdateTexture(master->getMasterTexture(), NULL, screen->pixels, screen->pitch);
+  if(drawing)
+  {
+    // Convert surface to texture
+    SDL_UpdateTexture(master->getMasterTexture(), NULL, screen->pixels, screen->pitch);
 
-  // Update the texture
-  SDL_RenderCopy(renderer, master->getMasterTexture(), NULL, NULL);
+    // Update the texture
+    SDL_RenderCopy(renderer, master->getMasterTexture(), NULL, NULL);
 
-  // Draw the (scaled and rotated) vision cones
-  drawVision();
+    // Draw the (scaled and rotated) vision cones
+    drawVision();
+  }
 }
 
 visible_information Simulation::applyPerception(human *h)
@@ -251,7 +263,11 @@ void Simulation::calculateTotalTime()
 
 void Simulation::handleInput(int frame_time, input inputs)
 {
-
+  if(inputs.key == SDL_SCANCODE_D)
+  {
+    // Toggle drawing
+    drawing = !drawing;
+  }
 }
 
 void Simulation::updateActions()
@@ -322,8 +338,8 @@ void Simulation::moveHumans(int frame_time)
       }
 
       // Check which human is in front
-      if(isFrontHuman(h, collisions);
-      i/*f(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0 &&
+      if(!isFrontHuman(h, collisions))
+      /*if(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0 &&
          collided->status == HEALTHY)*/
       {
         h->position = h->previous_position;
@@ -353,7 +369,7 @@ void Simulation::moveHumans(int frame_time)
 void Simulation::updateFallen()
 {
   bool alive_collisions = false;
-  
+
   for(unsigned int i=0; i < people.size(); i++)
   {
     human *h = &people[i];
@@ -362,9 +378,9 @@ void Simulation::updateFallen()
       float distance;
       vector<human *> collisions = humanCollision(h, &distance);
       // See if any of the colliding humans are alive
-      for(int j=0; j < collisions.size(); j++)
+      for(unsigned int j=0; j < collisions.size(); j++)
       {
-        if(collisions[i]->status == HEALTHY)
+        if(collisions[j]->status == HEALTHY)
         { alive_collisions = true; }
       }
       if(h->lying.isStarted() && h->lying.getTime() > standup_time &&
@@ -716,7 +732,7 @@ void Simulation::drawVision()
   for(unsigned int i=0; i < people.size(); i++)
   {
     human *indiv = &people[i];
-    
+
     if(indiv->escaped)
     { continue; } // Don't draw cones when human has disappeared
 
@@ -777,7 +793,7 @@ vector<human *>  Simulation::humanCollision(human *target, float *distance)
     if(*distance < 0.0f)
     { collided.push_back(&people[i]); }
   }
-  return colllided;
+  return collided;
 }
 
 bool Simulation::collisionChecked(vector< vector<human *> > checked_collisions, human *a, human *b)
@@ -815,10 +831,10 @@ bool Simulation::hitsWall(human *target, bool include_exit)
 
 bool Simulation::isFrontHuman(human *h, vector<human *> collisions)
 {
-  for(int i=0; i < collisions.size(); i++)
+  for(unsigned int i=0; i < collisions.size(); i++)
   {
     human *collided = collisions[i];
-    
+
     if(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0 &&
        collided->status == HEALTHY)
     {

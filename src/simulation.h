@@ -96,6 +96,7 @@ class Simulation
         frame_counter;
     bool load_walls;  // Whether a wall configuration file must be loaded
     bool single_cone; // Whether just the vision cone of the focused human should be drawn
+    bool drawing;
     int n_people;
     int max_placement_tries;  // How many times a person should be attempted to be spawned not inside somebody else
     int min_radius, max_radius; // The minimum/maximum radius of a person, anything < 5 makes the circle odd shaped

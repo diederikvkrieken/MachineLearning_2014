@@ -1,6 +1,8 @@
 #ifndef GRID_H
 #define GRID_H
 
+#include "functions.h"
+
 class Grid
 {
   public:
