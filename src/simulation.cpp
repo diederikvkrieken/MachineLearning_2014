@@ -32,10 +32,12 @@ void Simulation::init(Master *master_ptr, Machine *machine_ptr)
   vision_alpha = 50;
   chance_collision_fall = 0.5f;
   standup_time = 4000;
-  trample_constant = 0.00005f;
+  trample_constant = 0.00001f;
   push_rate = 2000;
   max_frames = 100000;
   frame_counter = 0;
+  action_rate = 10;
+  frames_since_action = action_rate;
 
   exit_location.set(0,0);
 
@@ -179,16 +181,14 @@ void Simulation::update(int frame_time, input inputs)
   {
     // Draw walls
     drawWalls();
-  }
 
-  for(unsigned int i=0; i < people.size(); i++)
-  {
-    if(!people[i].escaped )
-    { drawHuman(people[i]); }
-  }
+    // Draw humans
+    for(unsigned int i=0; i < people.size(); i++)
+    {
+      if(!people[i].escaped )
+      { drawHuman(people[i]); }
+    }
 
-  if(drawing)
-  {
     // Convert surface to texture
     SDL_UpdateTexture(master->getMasterTexture(), NULL, screen->pixels, screen->pitch);
 
@@ -272,6 +272,12 @@ void Simulation::handleInput(int frame_time, input inputs)
 
 void Simulation::updateActions()
 {
+  frames_since_action++;
+
+  if(frames_since_action <= action_rate)
+  { return; } // Too soon to change actions from network
+  frames_since_action = 0;
+
   for(unsigned int i=0; i < people.size(); i++)
   {
     human *h = &people[i];
@@ -302,7 +308,7 @@ void Simulation::moveHumans(int frame_time)
     { continue; }
 
     // Detect collisions
-    float overlap;
+    float overlap;  /** TODO: doesn't make sense with multiple collisions **/
     vector<human *> collisions = humanCollision(h, &overlap);
     if(collisions.size() > 0)
     {
@@ -368,13 +374,16 @@ void Simulation::moveHumans(int frame_time)
 
 void Simulation::updateFallen()
 {
-  bool alive_collisions = false;
+  bool alive_collisions;
 
   for(unsigned int i=0; i < people.size(); i++)
   {
     human *h = &people[i];
+
     if(h->status == FALLEN)
     {
+      alive_collisions = false;
+
       float distance;
       vector<human *> collisions = humanCollision(h, &distance);
       // See if any of the colliding humans are alive
@@ -450,8 +459,9 @@ void Simulation::trample(int frame_time, human *fallen, human *treading, float o
   // Trampling goes faster if the two humans overlap more
   // weight is between [0,1]
   float overlap_weight = overlap / (float)(fallen->radius + treading->radius);
+  /** [overlap_weight] is disabled **/
 
-  fallen->trample_status += frame_time * treading->radius * trample_constant * overlap_weight;
+  fallen->trample_status += frame_time * treading->radius * trample_constant/* * overlap_weight*/;
   if(fallen->trample_status >= 1.0f)
   {
     fallen->status = DEAD;
@@ -777,6 +787,8 @@ void Simulation::placeHuman(dim2 position, dim2 direction, human_gender gender, 
 
 vector<human *>  Simulation::humanCollision(human *target, float *distance)
 {
+  SDL_Rect bounding_box;
+
   vector<human *> collided;
   for(unsigned int i=0; i < people.size(); i++)
   {
@@ -788,6 +800,15 @@ vector<human *>  Simulation::humanCollision(human *target, float *distance)
     if(target->ID == people[i].ID)
     { continue; }
 
+    // Check within minimum bounding box for possible collisions
+    bounding_box.x = target->position.x - max_radius * 2;
+    bounding_box.y = target->position.y - max_radius * 2;
+    bounding_box.w = max_radius * 4;
+    bounding_box.h = bounding_box.w;
+    if(!detectCollisionPointBoundingBox(people[i].position, bounding_box))
+    { continue; }
+
+    /** TODO: distance doesn't make sense with multiple collisions **/
     *distance = detectCollisionCircle(people[i].position, people[i].radius, target->position, target->radius);
     // Check if circles overlap
     if(*distance < 0.0f)
@@ -800,8 +821,8 @@ bool Simulation::collisionChecked(vector< vector<human *> > checked_collisions, 
 {
   for(unsigned int i=0; i < checked_collisions.size(); i++)
   {
-    if((checked_collisions[i][0] == a && checked_collisions[i][1] == b) ||
-       (checked_collisions[i][0] == b && checked_collisions[i][1] == a))
+    if((checked_collisions[i][0]->ID == a->ID && checked_collisions[i][1]->ID == b->ID) ||
+       (checked_collisions[i][0]->ID == b->ID && checked_collisions[i][1]->ID == a->ID))
     { return true; }
   }
   return false;

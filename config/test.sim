@@ -11,4 +11,4 @@ min_height:40
 max_height:205
 min_age:2
 max_age:98
-max_simulation_frames:200
+max_simulation_frames:2500
