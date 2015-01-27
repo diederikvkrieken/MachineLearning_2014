@@ -93,9 +93,12 @@ class Simulation
     Uint32 total_escape_time,
            start_time;
     int max_frames, // Simulation is allowed to run for this many frames before quitting
-        frame_counter;
+        frame_counter,
+        frames_since_action,  // The amount of frames since the network was last consulted
+        action_rate;  // Every how many frames should the network be consulted
     bool load_walls;  // Whether a wall configuration file must be loaded
     bool single_cone; // Whether just the vision cone of the focused human should be drawn
+    bool drawing;
     int n_people;
     int max_placement_tries;  // How many times a person should be attempted to be spawned not inside somebody else
     int min_radius, max_radius; // The minimum/maximum radius of a person, anything < 5 makes the circle odd shaped

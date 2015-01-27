@@ -626,9 +626,24 @@ float percentToPortion(float percent)
   return percent * 0.01;
 }
 
+bool detectCollisionPointBoundingBox(dim2 point, SDL_Rect box)
+{
+  if(point.x < box.x)
+  { return false; }
+  if(point.x >= box.x + box.w)
+  { return false; }
+  if(point.y < box.y)
+  { return false; }
+  if(point.y >= box.y + box.h)
+  { return false; }
+  return true;
+}
+
 float detectCollisionCircle(dim2 c1, float r1, dim2 c2, float r2)
 {
-  return computeDistance(c1, c2) - (r1 + r2);
+  /*return computeDistance(c1, c2) - (r1 + r2);*/
+  float radiuses_add = r1 + r2;
+  return computeDistanceSquared(c1, c2) - (radiuses_add*radiuses_add);
 }
 
 /** Expects angles to be in degrees in the range [0,360] **/
@@ -675,6 +690,12 @@ float computeDistance(dim2 target, dim2 center)
 {
   dim2 delta = target - center;
   return sqrtf(delta.x*delta.x + delta.y*delta.y);
+}
+
+float computeDistanceSquared(dim2 target, dim2 center)
+{
+  dim2 delta = target - center;
+  return delta.x*delta.x + delta.y*delta.y;
 }
 
 float computeDistance(dim3 target, dim3 center)

@@ -105,12 +105,14 @@ rgb repeatRGB(float value);
 
 float percentToPortion(float percent);
 
+bool detectCollisionPointBoundingBox(dim2 point, SDL_Rect box);
 float detectCollisionCircle(dim2 c1, float r1, dim2 c2, float r2);
 bool detectCollisionPointCone(dim2 point, dim2 pos_cone, float range, float degrees, float facing_angle);
 bool detectCollisionLineCone(dim2 A, dim2 B, int precision, dim2 pos_cone, float range, float degrees, float facing_angle, float *closest_distance);
 
 float computeAngle(dim2 target, dim2 center);
 float computeDistance(dim2 target, dim2 center);
+float computeDistanceSquared(dim2 target, dim2 center);
 float computeDistance(dim3 target, dim3 center);
 float distancePointToLine(dim2 target, dim2 a, dim2 b);
 float distancePointToLineSegment(dim2 p, dim2 v, dim2 w);
