@@ -12,6 +12,8 @@ class Machine
   public:
     void init(Master *master_ptr);
     bool run(int frame_time, input inputs);
+    void saveState();
+    void loadState(string path);
     human_action queryNetwork(vector<float> nn_inputs);
 
     UI *getUI() { return &ui; }

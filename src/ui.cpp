@@ -1,11 +1,13 @@
 #include "ui.h"
 
 #include "master.h"
+#include "machine.h"
 #include "simulation.h"
 
-void UI::init(Master* master_ptr)
+void UI::init(Master* master_ptr, Machine *machine_ptr)
 {
   master = master_ptr;
+  machine = machine_ptr;
   simulation = master->getSimulation();
 
   renderer = master->getRenderer();
@@ -124,7 +126,6 @@ void UI::exportWalls(string path)
   for(unsigned int i=0; i < walls.size(); i++)
   {
     output.str("");
-    printf("walls x: %d -- y: %d\n", walls[i].x, walls[i].y);
     output << walls[i].x << "," << walls[i].y;
     file.write(output.str().c_str(), output.str().size());
     file.write(";", 1);
@@ -171,6 +172,14 @@ void UI::parseParameter(vector<string> words)
       simulation->setLoadWalls(true);
       readWalls("config/walls/" + words[1]);
       walls_file = words[1];
+    }
+  }
+  if(words[0] == "load_save")
+  {
+    if(!(words.size() == 1 || words[1] == "" || words[1] == " " || words[1] == "\n"))
+    {
+      // Load saved state
+      machine->loadState("saves/" + words[1]);
     }
   }
   if(words[0] == "single_cone")
