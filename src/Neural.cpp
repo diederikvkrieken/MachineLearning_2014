@@ -58,8 +58,9 @@ void NN::initializeNN()
   }
 
   //number of weights+bias
-  /** TO-DO maxValue Controleren **/
+  /** TODO: maxValue Controleren **/
   best_global_error = 100000000;
+  best_global_position.assign(nW,0);
 
   // Allocate particles
   for(int i=0; i < nParticles; i++)
@@ -147,7 +148,7 @@ void NN::positionToWeights(int particle)
   vector<float> position = p_x[particle];
   if (position.size() != nW)
   {
-      fprintf(stderr, "[NN.positionToWeights] length of position != nW.\n");
+      fprintf(stderr, "[NN.positionToWeights] length of position != nW (length(position) = %d , nW = %d). Particle: %d\n", position.size(), nW, particle);
   }
   int i=0;
   for(int j=0; j < n_hidden; j++)
@@ -223,6 +224,46 @@ vector<float> NN::runNN(vector<float> input)
     }
     /*printf("\n");*/
     return nOL;
+}
+
+vector<float> NN::getParticleWeights(int particle)
+{
+  return p_x[particle];
+}
+
+vector<float> NN::getParticleSpeed(int particle)
+{
+  return p_v[particle];
+}
+
+vector<float> NN::getParticleBestWeights(int particle)
+{
+  return p_bx[particle];
+}
+
+vector<float> NN::getBestWeights()
+{
+  return best_global_position;
+}
+
+void NN::setParticleWeights(int particle, vector<float> weights)
+{
+  p_x[particle] = weights;
+}
+
+void NN::setParticleSpeed(int particle, vector<float> weights)
+{
+  p_v[particle] = weights;
+}
+
+void NN::setParticleBestWeights(int particle, vector<float> weights)
+{
+  p_bx[particle] = weights;
+}
+
+void NN::setBestWeights(vector<float> weights)
+{
+  best_global_position = weights;
 }
 
 //void NN::wegschrijvenParticles(string text_name)

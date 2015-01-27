@@ -9,6 +9,7 @@
 #include "functions.h"
 
 class Master;
+class Machine;
 class Simulation;
 
 using namespace std;
@@ -16,7 +17,7 @@ using namespace std;
 class UI
 {
   public:
-    void init(Master *master_ptr);
+    void init(Master *master_ptr, Machine *machine_ptr);
     void update(input *inputs);
 
     void setStatus(simulation_status s) { status = s; }
@@ -48,6 +49,7 @@ class UI
     SDL_Renderer *renderer;
 
     Master *master;
+    Machine *machine;
     Simulation *simulation;
 };
 

@@ -15,6 +15,16 @@ class NN
     float activationFunction(float input ,float bias);
     vector<float> runNN(vector<float> input);
 
+    vector<float> getParticleWeights(int particle);
+    vector<float> getParticleSpeed(int particle);
+    vector<float> getParticleBestWeights(int particle);
+    vector<float> getBestWeights();
+
+    void setParticleWeights(int particle, vector<float> weights);
+    void setParticleSpeed(int particle, vector<float> weights);
+    void setParticleBestWeights(int particle, vector<float> weights);
+    void setBestWeights(vector<float> weights);
+
     vector< vector<float> > wHL,
                             wOL,
                             p_x,

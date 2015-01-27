@@ -263,10 +263,17 @@ void Simulation::calculateTotalTime()
 
 void Simulation::handleInput(int frame_time, input inputs)
 {
-  if(inputs.key == SDL_SCANCODE_D)
+  if(inputs.key == SDL_SCANCODE_D)  // D
   {
     // Toggle drawing
     drawing = !drawing;
+  }
+  if((inputs.key_state[SDL_SCANCODE_LCTRL] || inputs.key_state[SDL_SCANCODE_RCTRL]) &&
+     inputs.key == SDL_SCANCODE_S)  // CTRL + S
+  {
+    // Save the state
+    printf("saving\n");
+    machine->saveState();
   }
 }
 
