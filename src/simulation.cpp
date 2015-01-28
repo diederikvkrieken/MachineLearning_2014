@@ -351,7 +351,7 @@ void Simulation::moveHumans(int frame_time)
       }
 
       // Check which human is in front
-      if (isFrontHuman(h, collisions));
+      if(!isFrontHuman(h, collisions))
       /*if(dot(normalise(h->direction), normalise(collided->position - h->position)) >= 0 &&
          collided->status == HEALTHY)*/
       {
@@ -381,7 +381,7 @@ void Simulation::moveHumans(int frame_time)
 
 void Simulation::updateFallen()
 {
-  bool alive_collisions = false;
+  bool alive_collisions;
 
   for(unsigned int i=0; i < people.size(); i++)
   {
