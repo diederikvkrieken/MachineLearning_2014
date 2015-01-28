@@ -52,7 +52,7 @@ void Simulation::init(Master *master_ptr, Machine *machine_ptr)
   status = MAIN_SCREEN;
   load_walls = false;
   single_cone = false;
-  drawing = true;
+  drawing = false;
 
   // Set up base surface/texture
   screen = master->createEmptySurface(master->getResolution().x, master->getResolution().y);
