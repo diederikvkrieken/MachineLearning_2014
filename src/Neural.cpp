@@ -259,9 +259,9 @@ vector<float> NN::runHandAlgorithm(vector<float> input)
     float panic;
 
     **/
-    float x_dir = mean_direction.x;
-    float y_dir = mean_direction.y;
-    float panic = mean_panic
+    float x_dir = input[4];
+    float y_dir = input[5];
+    float panic = input[6];
 
 
     vector <float> output;
