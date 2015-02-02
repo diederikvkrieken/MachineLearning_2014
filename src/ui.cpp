@@ -160,6 +160,8 @@ void UI::parseParameter(vector<string> words)
   { simulation->setMaxSpeed(atof(words[1].c_str())); }
   if(words[0] == "max_simulation_frames")
   { simulation->setMaxFrames(atoi(words[1].c_str())); }
+  if(words[0] == "neural_network")
+  { simulation->setNN(atoi(words[1].c_str())); }
   if(words[0] == "walls_file")
   {
     if(words.size() == 1 || words[1] == "" || words[1] == " " || words[1] == "\n")

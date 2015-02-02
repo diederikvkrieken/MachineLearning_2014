@@ -21,7 +21,11 @@ bool Machine::run(int frame_time, input inputs)
     printf("idling\n");
     // Simulation is waiting to start
     // Construct the appropriate network
-    network.positionToWeights(current_particle);
+    int NN = simulation->getNN;
+    if (NN == 1)
+    {
+        network.positionToWeights(current_particle);
+    }
     // Start simulation
     simulation.setStatus(SPAWNING);
   }
@@ -191,7 +195,15 @@ human_action Machine::queryNetwork(vector<float> nn_inputs)
 {
   human_action action;
 
-  vector<float> output = network.runNN(nn_inputs);
+  if (NN == 1)
+  {
+    vector<float> output = network.runNN(nn_inputs);
+  }else
+  {
+    vector<float> output = network.runHandAlgorithm(nn_inputs);
+  }
+
+
   action.direction.set(output[0], output[1]);
   /*printDim2("direction output: ", action.direction);*/
   action.direction = (normalise(action.direction))/100;
