@@ -852,9 +852,11 @@ float calculateVariance(vector<float> a, float mean)
   { return 0.0f; }
 
   float var = 0;
+  float element;
   for(unsigned int i=0; i < a.size(); i++)
   {
-    var += pow((mean - a[i]),2);
+    element = (mean - a[i]);
+    var += element * element;
   }
   return var / (a.size() - 1);
 }

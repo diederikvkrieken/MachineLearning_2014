@@ -199,7 +199,7 @@ struct human
 
 struct visible_information
 {
-  int n_people;
+  float n_people;
   /*float male_ratio;*/
   float mean_height;
   float mean_radius;
@@ -211,7 +211,7 @@ struct visible_information
   float var_age;
   float var_panic;
   dim2 var_direction;
-  int n_walls;
+  float n_walls;
   float closest_wall_distance;
   float exit_distance;
 };

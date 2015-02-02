@@ -193,9 +193,10 @@ human_action Machine::queryNetwork(vector<float> nn_inputs)
 
   vector<float> output = network.runNN(nn_inputs);
   action.direction.set(output[0], output[1]);
-  /*printDim2("direction output: ", action.direction);*/
-  action.direction = (normalise(action.direction))/100;
+  action.direction = (normalise(action.direction)) * 0.01f;
+  /*printDim2("direction output", action.direction);*/
   action.panic = output[2];
+  action.panic = (action.panic + 1) * 0.5f; // Convert to [0,1]
   return action;
 }
 
