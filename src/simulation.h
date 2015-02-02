@@ -33,6 +33,9 @@ class Simulation
     void setMinAge(int a) { min_age = a; }
     void setMaxAge(int a) { max_age = a; }
     void setMaxFrames(int a) { max_frames = a; }
+    void setNN(int a) { NeuralNetwork = a; }
+    int getNN();
+
 
     visible_information applyPerception(human *h);
     simulation_status getStatus() { return status; }
@@ -124,6 +127,7 @@ class Simulation
     Machine *machine;
     UI *ui;
     NN *network;
+    int NeuralNetwork;
 
 };
 

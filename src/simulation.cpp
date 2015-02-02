@@ -916,6 +916,11 @@ float Simulation::getPushChance(human *h)
   return chance;
 }
 
+int Simulation::getNN()
+{
+  return NeuralNetwork;
+}
+
 void Simulation::getAgeMeanVariance(vector<human *> humans, float *mean, float *variance)
 {
   vector<float> numbers;
