@@ -1010,6 +1010,13 @@ vector<float> Simulation::createNNInputs(human *h, visible_information info)
   return result;
 }
 
+/** Normalise the visible information to about the range [-1,1] **/
+visible_information Simulation::normaliseVision(visible_information info)
+{
+  info.n_people = (info.n_people / (float)n_people) - 0.5f) * 2.0f;
+  /*info.mean_height = info.mean_height / */
+}
+
 
 
 

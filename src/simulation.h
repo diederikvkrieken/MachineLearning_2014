@@ -77,6 +77,7 @@ class Simulation
     void getDirectionMeanVariance(vector<human *> humans, dim2 *mean, dim2 *variance);
     dim2 determineExit();
     vector<float> createNNInputs(human *h, visible_information info);
+    visible_information normaliseVision(visible_information info);
 
     SDL_Surface *screen, *walls;
     SDL_Texture *vision_cone;
