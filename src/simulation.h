@@ -101,6 +101,7 @@ class Simulation
         action_rate;  // Every how many frames should the network be consulted
     bool load_walls;  // Whether a wall configuration file must be loaded
     bool single_cone; // Whether just the vision cone of the focused human should be drawn
+    int NeuralNetwork;
     bool drawing;
     int n_people;
     int max_placement_tries;  // How many times a person should be attempted to be spawned not inside somebody else
@@ -127,7 +128,6 @@ class Simulation
     Machine *machine;
     UI *ui;
     NN *network;
-    int NeuralNetwork;
 
 };
 

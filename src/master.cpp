@@ -166,7 +166,7 @@ void Master::outputFPS(Uint32 frame_length)
     total_fps += frame_counter;
     frame_counter = 0;
     frame_time_counter = 0;
-    printf("FPS:\t %d.\t Total FPS:\t %d\n", fps, total_fps);
+    printf("FPS:\t %d.\n", fps);
   }
 }
 
