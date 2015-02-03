@@ -12,7 +12,7 @@
 using namespace std;
 
 const float PI = 3.14159265359;
-const float EPSILON = 0.00001;
+const float EPSILON = 0.000001;
 
 const int LEFT =        0;
 const int RIGHT =       1;
@@ -190,11 +190,11 @@ struct human
   float fov;  // Field of view
   float panic; // Panic number between 0 (low panic) and 1 (high panic)
   bool escaped;
-  Uint32 escape_time; // Time it took to escape in ms. Max frames value in case of no escape
+  Uint32 escape_frames; // Time it took to escape in frames. Max frames value in case of no escape
   health_status status;
   float trample_status; // Value in [0,1] that indicates how close somebody is to dying from being trampled
-  Timer lying;  // Time in ms indicating how long someone has been lying on the ground
-  Timer push_time_out;  // How long somebody hasn't pushed someone else
+  Uint32 lying;  // Amount of frames indicating how long someone has been lying on the ground
+  Uint32 push_time_out;  // How many frames somebody hasn't pushed someone else
 };
 
 struct visible_information
@@ -206,6 +206,7 @@ struct visible_information
   float mean_age;
   float mean_panic;
   dim2 mean_direction;
+  dim2 mean_relative_position;
   float var_height;
   float var_radius;
   float var_age;

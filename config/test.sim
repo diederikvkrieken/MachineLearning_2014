@@ -1,4 +1,4 @@
-walls_file:CONT.sim
+walls_file:cont.sim
 load_save:
 single_cone:1
 n_people:100
@@ -6,11 +6,11 @@ min_radius:4
 max_radius:8
 min_vision_range:35
 max_vision_range:150
-min_speed:0.005
-max_speed:0.01
+min_speed:0.05
+max_speed:0.1
 min_height:40
 max_height:205
 min_age:2
 max_age:98
-max_simulation_frames:1000
-neural_network:0
+max_simulation_frames:5000
+neural_network:1

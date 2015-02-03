@@ -52,10 +52,12 @@ bool Machine::run(int frame_time, input inputs)
     }
     if(current_epoch >= network.maxEpoch)
     {
+      saveState();
+      /** TODO: continue running same network when done **/
       printf("quitting\n");
       return false;
     }
-    printf("Epoch:\t%d.\t Particle:\t%d\n", current_epoch, current_particle);
+    printf("\tEpoch:\t\t%d.\n\tParticle:\t%d.\n", current_epoch, current_particle);
     simulation.setStatus(IDLE);
   }
 
@@ -196,22 +198,14 @@ human_action Machine::queryNetwork(vector<float> nn_inputs)
 {
   human_action action;
   vector<float> output;
-  int network_status = simulation.getNN();
 
-  if(network_status == 1)
-  {
-    output = network.runNN(nn_inputs);
-  }
-  else
-  {
-    output = network.runHandAlgorithm(nn_inputs);
-  }
+  output = network.runNN(nn_inputs);
 
   action.direction.set(output[0], output[1]);
-  action.direction = action.direction * 0.01f; // To adjust for values [-1,1]
+  action.direction = action.direction * 0.1f; // To adjust for values [-1,1]
   /*printDim2("direction output", action.direction);*/
   action.panic = output[2];
-  action.panic = (action.panic + 1) * 0.5f; // Convert to [0,1]
+  action.panic = (action.panic + 1.0f) * 0.5f; // Convert to [0,1]
   return action;
 }
 

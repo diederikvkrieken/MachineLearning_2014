@@ -14,8 +14,6 @@ class NN
 //    void wegschrijvenParticles(string text_name);
     float activationFunction(float input ,float bias);
     vector<float> runNN(vector<float> input);
-    vector<float> runHandAlgorithm(vector<float> input);
-
 
     vector<float> getParticleWeights(int particle);
     vector<float> getParticleSpeed(int particle);

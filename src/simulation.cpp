@@ -13,7 +13,7 @@ void Simulation::init(Master *master_ptr, Machine *machine_ptr)
   network = machine->getNetwork();
   renderer = master->getRenderer();
 
-  total_escape_time = 0;
+  total_escape_frames = 0;
   min_radius = 4;
   max_radius = 12;
   min_age = 2;
@@ -31,11 +31,12 @@ void Simulation::init(Master *master_ptr, Machine *machine_ptr)
   default_panic = 0.2f;
   vision_alpha = 50;
   chance_collision_fall = 0.5f;
-  standup_time = 4000;
-  trample_constant = 0.00001f;
-  exit_distance_sufficient = 30;
-  push_rate = 2000;
-  max_frames = 100000;
+  standup_frames = 440;
+  trample_constant = 0.00015f;
+  exit_distance_sufficient = 40;
+  wall_follow_distance = 21;
+  push_rate = 220;
+  max_frames = 10000;
   frame_counter = 0;
   action_rate = 10;
   frames_since_action = action_rate;
@@ -85,8 +86,9 @@ void Simulation::fillBuilding()
       new_human.gender = MALE;
       new_human.status = HEALTHY;
       new_human.escaped = false;
-      new_human.escape_time = 0;
-      new_human.push_time_out.start();
+      new_human.escape_frames = 0;
+      new_human.lying = 0;
+      new_human.push_time_out = push_rate;
       new_human.trample_status = 0.0f;
       new_human.panic = default_panic;
       new_human.age = randInt(min_age, max_age);
@@ -158,9 +160,8 @@ void Simulation::update(int frame_time, input inputs)
   else if(status == SPAWNING)
   {
     fillBuilding();
-    total_escape_time = 0;
+    total_escape_frames = 0;
     frame_counter = 0;
-    start_time = SDL_GetTicks();
     status = RUNNING;
   }
   else if(status == RUNNING)
@@ -174,7 +175,7 @@ void Simulation::update(int frame_time, input inputs)
     }
     updateActions();
     updateFallen();
-    moveHumans(frame_time);
+    moveHumans();
 
     frame_counter++;
   }
@@ -202,9 +203,80 @@ void Simulation::update(int frame_time, input inputs)
   }
 }
 
+human_action Simulation::runHandAlgorithm(vector<float> input, human *h)
+{
+  human_action action;
+
+  /**
+  FOLLOWING INPUT ORDER:
+  0. closest_wall_distance
+  1. exit_distance
+  2. mean_age
+  3. mean_direction.x
+  4. mean_direction.y
+  5. mean_height
+  6. mean_panic
+  7. mean_radius
+  8. n_people
+  9. n_walls
+  10. var_age
+  11. var_direction.x
+  12. var_direction.y
+  13. var_height
+  14. var_panic
+  15. var_radius
+  16. h->direction.x
+  17. h->direction.y
+  18. h->age
+  19. h->height
+  20. h->panic
+  21. h->radius
+  22. can_see_exit
+  23. mean_position.x
+  24. mean_position.y
+
+  FOLLOWING OUPUT ORDER:
+  dim2 direction; (x,y)
+  float panic;
+
+  **/
+  /*float x_dir = input[3];
+  float y_dir = input[4];
+  float panic = input[6];*/
+  /*printf("x_dir = %.2f. y_dir = %.2f panic = %.2f\n",x_dir, y_dir,panic );*/
+
+  float current_speed = length(h->direction);
+
+  // Check if human can see exit and is close enough
+  if(input[22] > -1.0f && closeEnoughToExit(h, exit_location))
+  { action.direction = normalise(exit_location - h->position) * current_speed; }  // Go towards exit
+  else
+  {
+    dim2 parallel = getWallParallel(h);
+    // Check if close enough to a wall to follow
+    if(length(parallel) > EPSILON)
+    {
+      action.direction = parallel * current_speed;
+    }
+    else
+    {
+      // Continue current direction
+      action.direction = h->direction;
+    }
+  }
+
+  // Scale panic with distance to exit
+  // Panic will never be high in small rooms because the distance is normalised based on total screen space
+  action.panic = (input[1] + 1.0f) * 0.5f;
+
+  return action;
+}
+
 /** Normalises the values between [-1,1] **/
 visible_information Simulation::applyPerception(human *h)
 {
+  float max_value = 500000.0f;
+
   visible_information view;
 
   vector<human *> visible_humans = visibleHumans(h);
@@ -215,11 +287,12 @@ visible_information Simulation::applyPerception(human *h)
   getRadiusMeanVariance(visible_humans, &view.mean_radius, &view.var_radius);
   getPanicMeanVariance(visible_humans, &view.mean_panic, &view.var_panic);
   getDirectionMeanVariance(visible_humans, &view.mean_direction, &view.var_direction);
+  getRelativePositionMean(visible_humans, h->position, &view.mean_relative_position);
 
   view.exit_distance = (computeDistance(exit_location, h->position) / (float)master->getResolution().x - 0.5f) * 2.0f; // Straight-line distance
 
   view.n_walls = 0;
-  view.closest_wall_distance = -1.0f;  // No wall in sight
+  view.closest_wall_distance = max_value;  // No wall in sight
   float facing_angle = toDegrees(radiansPositiveOnly(computeAngle(h->direction, makeDim2(0.0f, 0.0f))));
   // Check walls
   for(unsigned int i=0; i < wall_vertices.size() - 1; i++)
@@ -233,13 +306,13 @@ visible_information Simulation::applyPerception(human *h)
     {
       view.n_walls++;
       // Check if this wall is closer than others
-      if(distance < view.closest_wall_distance && distance >= 0.0f)
+      if(distance < view.closest_wall_distance)
       { view.closest_wall_distance = distance; }
     }
   }
   view.n_walls = (view.n_walls / (float)(wall_vertices.size() - 1) - 0.5f) * 2.0f;
-  if(view.closest_wall_distance < 0.0f)
-  { view.closest_wall_distance = 0.0f; }
+  if(view.closest_wall_distance > max_value - EPSILON)
+  { view.closest_wall_distance = -1.0f; }
   else
   { view.closest_wall_distance = (view.closest_wall_distance / (float)master->getResolution().x - 0.5f) * 2.0f; }
 
@@ -255,12 +328,11 @@ int Simulation::getResult()
 {
   if(status != STOPPED)
   { return -1; }
-  return total_escape_time;
+  return total_escape_frames;
 }
 
 void Simulation::calculateTotalTime()
 {
-  Uint32 end_time = SDL_GetTicks();
   // See which humans have not escaped and give them max time
   for(unsigned int i=0; i < people.size(); i++)
   {
@@ -268,10 +340,10 @@ void Simulation::calculateTotalTime()
 
     if(!h->escaped)
     {
-      h->escape_time = end_time - start_time;
+      h->escape_frames = frame_counter;
     }
     // Add to total
-    total_escape_time += h->escape_time;
+    total_escape_frames += h->escape_frames;
   }
 }
 
@@ -303,19 +375,27 @@ void Simulation::updateActions()
   {
     human *h = &people[i];
 
+    if(h->escaped || h->status == DEAD || h->status == FALLEN)
+    { continue; }
+
     vector<float> nn_inputs = createNNInputs(h, applyPerception(h));
     /*printf("human idx: %d\n", i);
     for(unsigned int j=0; j < nn_inputs.size(); j++)
     {
       printf("input %d = %.2f\n", j, nn_inputs[j]);
-    }*/
-    human_action action = machine->queryNetwork(nn_inputs);
+    }
+    printf("--------------\n");*/
+    human_action action;
+    if(NeuralNetwork == 1)
+    { action = machine->queryNetwork(nn_inputs); }
+    else
+    { action = runHandAlgorithm(nn_inputs, h); }
     h->direction = action.direction;
     h->panic = action.panic;
   }
 }
 
-void Simulation::moveHumans(int frame_time)
+void Simulation::moveHumans()
 {
   vector< vector<human *> > checked_collisions; // Keep track of when two humans collide to avoid double pushing/trampling
 
@@ -336,17 +416,18 @@ void Simulation::moveHumans(int frame_time)
       for(unsigned int j=0; j < collisions.size(); j++)
       {
         human *collided = collisions[j];
+
         // Handle pushing and trampling
         if(!collisionChecked(checked_collisions, h, collided))
         {
           if(collided->status == FALLEN)
           {
             // Hurt the human lying on the ground
-            trample(frame_time, collided, h, -overlap);
+            trample(collided, h, -overlap);
           }
-          else if(collided->status == HEALTHY &&
-                  ((computeChance(getPushChance(h), 100) && h->push_time_out.getTime() > push_rate) ||  // Check if one of them wants to push
-                   (computeChance(getPushChance(collided), 100) && collided->push_time_out.getTime() > push_rate)))
+          else if(collided->status == HEALTHY && !collided->escaped &&
+                  ((computeChance(getPushChance(h), 100) && frame_counter - h->push_time_out > push_rate) ||  // Check if one of them wants to push
+                   (computeChance(getPushChance(collided), 100) && frame_counter - collided->push_time_out > push_rate)))
           {
             push(h, collided);
           }
@@ -382,12 +463,12 @@ void Simulation::moveHumans(int frame_time)
 
     // Calculate new position based on frame time and direction
     h->previous_position = h->position;
-    h->position = h->position + h->direction * frame_time;
+    h->position = h->position + h->direction;
     // Check if still in the building
     if(!humanInBuilding(h))
     {
       h->escaped = true;
-      h->escape_time = SDL_GetTicks() - start_time;
+      h->escape_frames = frame_counter;
     }
   }
 }
@@ -412,11 +493,9 @@ void Simulation::updateFallen()
         if(collisions[j]->status == HEALTHY)
         { alive_collisions = true; }
       }
-      if(h->lying.isStarted() && h->lying.getTime() > standup_time &&
+      if(frame_counter - h->lying > standup_frames &&
          (collisions.size() == 0 || !alive_collisions))  // The area is clear
       {
-        h->lying.stop();
-        h->lying.reset();
         h->trample_status = 0.0f;
         h->status = HEALTHY;
       }
@@ -437,8 +516,8 @@ void Simulation::push(human *a, human *b)
   { return; }
 
   // Reset time-outs
-  a->push_time_out.reset();
-  b->push_time_out.reset();
+  a->push_time_out = frame_counter;
+  b->push_time_out = frame_counter;
 
   // Constants to normalize score factors
   direction_weight = 1.0f;
@@ -465,23 +544,23 @@ void Simulation::push(human *a, human *b)
   if(a_score > b_score)
   {
     b->status = FALLEN;
-    b->lying.start(); // Start counting down stand-up timer
+    b->lying = frame_counter; // Start counting down stand-up timer
   }
   else
   {
     a->status = FALLEN;
-    a->lying.start();
+    a->lying = frame_counter;
   }
 }
 
-void Simulation::trample(int frame_time, human *fallen, human *treading, float overlap)
+void Simulation::trample(human *fallen, human *treading, float overlap)
 {
   // Trampling goes faster if the two humans overlap more
   // weight is between [0,1]
   float overlap_weight = overlap / (float)(fallen->radius + treading->radius);
   /** [overlap_weight] is disabled **/
 
-  fallen->trample_status += frame_time * treading->radius * trample_constant/* * overlap_weight*/;
+  fallen->trample_status += treading->radius * trample_constant/* * overlap_weight*/;
   if(fallen->trample_status >= 1.0f)
   {
     fallen->status = DEAD;
@@ -832,7 +911,10 @@ vector<human *>  Simulation::humanCollision(human *target, float *distance)
     *distance = detectCollisionCircle(people[i].position, people[i].radius, target->position, target->radius);
     // Check if circles overlap
     if(*distance < 0.0f)
-    { collided.push_back(&people[i]); }
+    {
+      if(!people[i].escaped && people[i].status != DEAD)
+      { collided.push_back(&people[i]); }
+    }
   }
   return collided;
 }
@@ -925,7 +1007,7 @@ vector<human *> Simulation::visibleHumans(human *h)
 float Simulation::getPushChance(human *h)
 {
   float chance = h->panic - 0.15f;
-  clamp(&chance, 0.0f, 1.0f);
+  clamp(&chance, 0.05f, 1.0f);  // Minimum 5% chance to push
   return chance;
 }
 
@@ -941,6 +1023,42 @@ bool Simulation::closeEnoughToExit(human *h, dim2 exit)
     return true;
   }
   return false;
+}
+
+dim2 Simulation::getWallParallel(human *h)
+{
+  float max_value = 500000;
+  float closest_wall_distance = max_value;  // No wall in sight
+  int closest_idx = -1;
+  float facing_angle = toDegrees(radiansPositiveOnly(computeAngle(h->direction, makeDim2(0.0f, 0.0f))));
+  vector<dim2> wall_points = convertPixelToDim2(wall_vertices);
+
+  // Check walls
+  for(unsigned int i=0; i < wall_points.size() - 1; i++)
+  {
+    dim2 current = wall_points[i];
+    dim2 next = wall_points[i+1];
+
+    // See if the person can see this wall section
+    float distance;
+    if(detectCollisionLineCone(current, next, 150, h->position, h->vision_range, h->fov, facing_angle, &distance))
+    {
+      // Check if this wall is closer than others
+      if(distance < closest_wall_distance)
+      {
+        closest_wall_distance = distance;
+        closest_idx = i;
+      }
+    }
+  }
+
+  dim2 direction = makeDim2(0.0f, 0.0f);
+  if(closest_idx == -1 ||  // No wall in sight, return 0
+     closest_wall_distance > wall_follow_distance)  // Too far from wall, return 0
+  { return direction; }
+
+  // Get parallel direction
+  return normalise(wall_points[closest_idx+1] - wall_points[closest_idx]);
 }
 
 void Simulation::getAgeMeanVariance(vector<human *> humans, float *mean, float *variance)
@@ -973,7 +1091,7 @@ void Simulation::getHeightMeanVariance(vector<human *> humans, float *mean, floa
   vector<float> numbers;
   for(unsigned int i=0; i < humans.size(); i++)
   {
-    float norm_val = ((humans[i]->height - min_height) / (max_height - min_height) - 0.5f) * 2.0f;
+    float norm_val = ((humans[i]->height - min_height) / (float)(max_height - min_height) - 0.5f) * 2.0f;
     numbers.push_back(norm_val);
   }
   *mean = calculateMean(numbers);
@@ -998,8 +1116,8 @@ void Simulation::getDirectionMeanVariance(vector<human *> humans, dim2 *mean, di
   vector<float> numbers_y;
   for(unsigned int i=0; i < humans.size(); i++)
   {
-    float norm_x = humans[i]->direction.x * 100.0f;
-    float norm_y = humans[i]->direction.y * 100.0f;
+    float norm_x = humans[i]->direction.x * 10.0f;
+    float norm_y = humans[i]->direction.y * 10.0f;
     numbers_x.push_back(norm_x);
     numbers_y.push_back(norm_y);
   }
@@ -1009,6 +1127,19 @@ void Simulation::getDirectionMeanVariance(vector<human *> humans, dim2 *mean, di
   (*variance).y = calculateVariance(numbers_y, (*mean).y);
 }
 
+void Simulation::getRelativePositionMean(vector<human *> humans, dim2 position, dim2 *mean)
+{
+  vector<float> numbers_x;
+  vector<float> numbers_y;
+  for(unsigned int i=0; i < humans.size(); i++)
+  {
+    dim2 relative = normalise(humans[i]->position - position);
+    numbers_x.push_back(relative.x);
+    numbers_y.push_back(relative.y);
+  }
+  (*mean).x = calculateMean(numbers_x);
+  (*mean).y = calculateMean(numbers_y);
+}
 
 /** Returns the exit point, which is represented by the center of the line of the the last wall section **/
 dim2 Simulation::determineExit()
@@ -1040,13 +1171,15 @@ vector<float> Simulation::createNNInputs(human *h, visible_information info)
   result.push_back(info.var_height);
   result.push_back(info.var_panic);
   result.push_back(info.var_radius);
-  result.push_back(h->direction.x * 100.0f);
-  result.push_back(h->direction.y * 100.0f);
+  result.push_back(h->direction.x * 10.0f);
+  result.push_back(h->direction.y * 10.0f);
   result.push_back(((h->age - min_age) / (float)(max_age - min_age) - 0.5f) * 2.0f);
-  result.push_back(((h->height - min_height) / (max_height - min_height) - 0.5f) * 2.0f);
+  result.push_back(((h->height - min_height) / (float)(max_height - min_height) - 0.5f) * 2.0f);
   result.push_back((h->panic - 0.5f) * 2.0f);
   result.push_back(((h->radius - min_radius) / (float)(max_radius - min_radius) - 0.5f) * 2.0f);
   result.push_back(info.can_see_exit);
+  result.push_back(info.mean_relative_position.x);
+  result.push_back(info.mean_relative_position.y);
 
   return result;
 }
