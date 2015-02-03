@@ -16,15 +16,15 @@ void Machine::init(Master *master_ptr)
 
 bool Machine::run(int frame_time, input inputs)
 {
+  int NN = simulation.getNN();
   if(simulation.getStatus() == IDLE)
   {
     printf("idling\n");
     // Simulation is waiting to start
     // Construct the appropriate network
-    int NN = simulation->getNN;
-    if (NN == 1)
+    if(NN == 1)
     {
-        network.positionToWeights(current_particle);
+      network.positionToWeights(current_particle);
     }
     // Start simulation
     simulation.setStatus(SPAWNING);
@@ -44,7 +44,8 @@ bool Machine::run(int frame_time, input inputs)
       {
         printf("time %d: %d\n", i, time_results[i]);
       }*/
-      network.trainNN(time_results);
+      if(NN == 1)
+      { network.trainNN(time_results); }
       time_results.clear();
       current_particle = 0;
       current_epoch++;
@@ -54,7 +55,7 @@ bool Machine::run(int frame_time, input inputs)
       printf("quitting\n");
       return false;
     }
-    printf("epoch:\t%d.\t Particle:\t%d\n", current_epoch, current_particle);
+    printf("Epoch:\t%d.\t Particle:\t%d\n", current_epoch, current_particle);
     simulation.setStatus(IDLE);
   }
 
@@ -194,20 +195,21 @@ void Machine::loadState(string path)
 human_action Machine::queryNetwork(vector<float> nn_inputs)
 {
   human_action action;
+  vector<float> output;
 
-  if (NN == 1)
+  if(simulation.getNN() == 1)
   {
-    vector<float> output = network.runNN(nn_inputs);
+    output = network.runNN(nn_inputs);
   }else
   {
-    vector<float> output = network.runHandAlgorithm(nn_inputs);
+    output = network.runHandAlgorithm(nn_inputs);
   }
 
-
   action.direction.set(output[0], output[1]);
-  /*printDim2("direction output: ", action.direction);*/
-  action.direction = (normalise(action.direction))/100;
+  action.direction = (normalise(action.direction)) * 0.01f;
+  /*printDim2("direction output", action.direction);*/
   action.panic = output[2];
+  action.panic = (action.panic + 1) * 0.5f; // Convert to [0,1]
   return action;
 }
 

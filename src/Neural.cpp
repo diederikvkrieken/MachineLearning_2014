@@ -228,47 +228,47 @@ vector<float> NN::runNN(vector<float> input)
 
 vector<float> NN::runHandAlgorithm(vector<float> input)
 {
-    /**
-    FOLLOWING INPUT ORDER:
-    0. closest_wall_distance
-    1. exit_distance
-    2. mean_age
-    3. mean_direction.x
-    4. mean_direction.y
-    5. mean_height
-    6. mean_panic
-    7. mean_radius
-    8. n_people
-    9. n_walls
-    10. var_age
-    11. var_direction.x
-    12. var_direction.y
-    13. var_height
-    14. var_panic
-    15. var_radius
-    16. h->direction.x
-    17. h->direction.y
-    18. h->age
-    19. h->height
-    20. h->panic
-    21. h->radius
+  /**
+  FOLLOWING INPUT ORDER:
+  0. closest_wall_distance
+  1. exit_distance
+  2. mean_age
+  3. mean_direction.x
+  4. mean_direction.y
+  5. mean_height
+  6. mean_panic
+  7. mean_radius
+  8. n_people
+  9. n_walls
+  10. var_age
+  11. var_direction.x
+  12. var_direction.y
+  13. var_height
+  14. var_panic
+  15. var_radius
+  16. h->direction.x
+  17. h->direction.y
+  18. h->age
+  19. h->height
+  20. h->panic
+  21. h->radius
 
 
-    FOLLOWING OUPUT ORDER:
-    dim2 direction; (x,y)
-    float panic;
+  FOLLOWING OUPUT ORDER:
+  dim2 direction; (x,y)
+  float panic;
 
-    **/
-    float x_dir = input[4];
-    float y_dir = input[5];
-    float panic = input[6];
+  **/
+  float x_dir = input[3];
+  float y_dir = input[4];
+  float panic = input[6];
 
 
-    vector <float> output;
-    output.push_back(x_dir);
-    output.push_back(y_dir);
-    output.push_back(panic);
-    return output;
+  vector <float> output;
+  output.push_back(x_dir);
+  output.push_back(y_dir);
+  output.push_back(panic);
+  return output;
 }
 
 vector<float> NN::getParticleWeights(int particle)

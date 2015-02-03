@@ -200,19 +200,21 @@ void Simulation::update(int frame_time, input inputs)
   }
 }
 
+/** Normalises the values between [-1,1] **/
 visible_information Simulation::applyPerception(human *h)
 {
   visible_information view;
 
   vector<human *> visible_humans = visibleHumans(h);
 
-  view.n_people = visible_humans.size();
+  view.n_people = (visible_humans.size() / (float)n_people - 0.5f) * 2.0f;
   getAgeMeanVariance(visible_humans, &view.mean_age, &view.var_age);
   getHeightMeanVariance(visible_humans, &view.mean_height, &view.var_height);
   getRadiusMeanVariance(visible_humans, &view.mean_radius, &view.var_radius);
   getPanicMeanVariance(visible_humans, &view.mean_panic, &view.var_panic);
   getDirectionMeanVariance(visible_humans, &view.mean_direction, &view.var_direction);
-  view.exit_distance = computeDistance(exit_location, h->position); // Straight-line distance
+
+  view.exit_distance = (computeDistance(exit_location, h->position) / (float)master->getResolution().x - 0.5f) * 2.0f; // Straight-line distance
 
   view.n_walls = 0;
   view.closest_wall_distance = -1.0f;  // No wall in sight
@@ -233,6 +235,11 @@ visible_information Simulation::applyPerception(human *h)
       { view.closest_wall_distance = distance; }
     }
   }
+  view.n_walls = (view.n_walls / (float)(wall_vertices.size() - 1) - 0.5f) * 2.0f;
+  if(view.closest_wall_distance < 0.0f)
+  { view.closest_wall_distance = 0.0f; }
+  else
+  { view.closest_wall_distance = (view.closest_wall_distance / (float)master->getResolution().x - 0.5f) * 2.0f; }
 
   return view;
 }
@@ -297,7 +304,6 @@ void Simulation::updateActions()
     }*/
     human_action action = machine->queryNetwork(nn_inputs);
     h->direction = action.direction;
-    /*printDim2("direction: ", h->direction);*/
     h->panic = action.panic;
   }
 }
@@ -920,7 +926,9 @@ void Simulation::getAgeMeanVariance(vector<human *> humans, float *mean, float *
   vector<float> numbers;
   for(unsigned int i=0; i < humans.size(); i++)
   {
-    numbers.push_back(humans[i]->age);
+    // Normalize value between [-1,1]
+    float norm_val = ((humans[i]->age - min_age) / (float)(max_age - min_age) - 0.5f) * 2.0f;
+    numbers.push_back(norm_val);
   }
   *mean = calculateMean(numbers);
   *variance = calculateVariance(numbers, *mean);
@@ -931,7 +939,8 @@ void Simulation::getRadiusMeanVariance(vector<human *> humans, float *mean, floa
   vector<float> numbers;
   for(unsigned int i=0; i < humans.size(); i++)
   {
-    numbers.push_back(humans[i]->radius);
+    float norm_val = ((humans[i]->radius - min_radius) / (float)(max_radius - min_radius) - 0.5f) * 2.0f;
+    numbers.push_back(norm_val);
   }
   *mean = calculateMean(numbers);
   *variance = calculateVariance(numbers, *mean);
@@ -942,7 +951,8 @@ void Simulation::getHeightMeanVariance(vector<human *> humans, float *mean, floa
   vector<float> numbers;
   for(unsigned int i=0; i < humans.size(); i++)
   {
-    numbers.push_back(humans[i]->height);
+    float norm_val = ((humans[i]->height - min_height) / (max_height - min_height) - 0.5f) * 2.0f;
+    numbers.push_back(norm_val);
   }
   *mean = calculateMean(numbers);
   *variance = calculateVariance(numbers, *mean);
@@ -953,7 +963,8 @@ void Simulation::getPanicMeanVariance(vector<human *> humans, float *mean, float
   vector<float> numbers;
   for(unsigned int i=0; i < humans.size(); i++)
   {
-    numbers.push_back(humans[i]->panic);
+    float norm_val = (humans[i]->panic - 0.5f) * 2.0f;
+    numbers.push_back(norm_val);
   }
   *mean = calculateMean(numbers);
   *variance = calculateVariance(numbers, *mean);
@@ -965,8 +976,10 @@ void Simulation::getDirectionMeanVariance(vector<human *> humans, dim2 *mean, di
   vector<float> numbers_y;
   for(unsigned int i=0; i < humans.size(); i++)
   {
-    numbers_x.push_back(humans[i]->direction.x);
-    numbers_y.push_back(humans[i]->direction.y);
+    float norm_x = humans[i]->direction.x * 100.0f;
+    float norm_y = humans[i]->direction.y * 100.0f;
+    numbers_x.push_back(norm_x);
+    numbers_y.push_back(norm_y);
   }
   (*mean).x = calculateMean(numbers_x);
   (*mean).y = calculateMean(numbers_y);
@@ -1005,22 +1018,23 @@ vector<float> Simulation::createNNInputs(human *h, visible_information info)
   result.push_back(info.var_height);
   result.push_back(info.var_panic);
   result.push_back(info.var_radius);
-  result.push_back(h->direction.x);
-  result.push_back(h->direction.y);
-  result.push_back(h->age);
-  result.push_back(h->height);
-  result.push_back(h->panic);
-  result.push_back(h->radius);
+  result.push_back(h->direction.x * 100.0f);
+  result.push_back(h->direction.y * 100.0f);
+  result.push_back(((h->age - min_age) / (float)(max_age - min_age) - 0.5f) * 2.0f);
+  result.push_back(((h->height - min_height) / (max_height - min_height) - 0.5f) * 2.0f);
+  result.push_back((h->panic - 0.5f) * 2.0f);
+  result.push_back(((h->radius - min_radius) / (float)(max_radius - min_radius) - 0.5f) * 2.0f);
 
   return result;
 }
 
-/** Normalise the visible information to about the range [-1,1] **/
-visible_information Simulation::normaliseVision(visible_information info)
+/** Normalises the visible information based on mix and max values from the config file to the range [-1,1] **/
+/*visible_information Simulation::normaliseVision(visible_information info)
 {
-  info.n_people = (info.n_people / (float)n_people) - 0.5f) * 2.0f;
-  /*info.mean_height = info.mean_height / */
-}
+  info.n_people = ((info.n_people / (float)n_people) - 0.5f) * 2.0f;
+  info.mean_height = ((info.mean_height - min_height) / (max_height - min_height) - 0.5f) * 2.0f;
+  info.var_height = (info.var_height )
+}*/
 
 
 
