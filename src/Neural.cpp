@@ -3,7 +3,7 @@
 void NN::initializeNN()
 {
   n_layers = 1;
-  n_input = 22;
+  n_input = 23;
   n_hidden = 50;
   n_output = 3;
   nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
@@ -252,7 +252,7 @@ vector<float> NN::runHandAlgorithm(vector<float> input)
   19. h->height
   20. h->panic
   21. h->radius
-
+  22. can_see_exit
 
   FOLLOWING OUPUT ORDER:
   dim2 direction; (x,y)
@@ -262,6 +262,7 @@ vector<float> NN::runHandAlgorithm(vector<float> input)
   float x_dir = input[3];
   float y_dir = input[4];
   float panic = input[6];
+  /*printf("x_dir = %.2f. y_dir = %.2f panic = %.2f\n",x_dir, y_dir,panic );*/
 
 
   vector <float> output;

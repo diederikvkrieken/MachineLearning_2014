@@ -36,7 +36,7 @@ class Simulation
     void setNN(int a) { NeuralNetwork = a; }
     int getNN();
 
-
+    bool closeEnoughToExit(human *h, dim2 exit);
     visible_information applyPerception(human *h);
     simulation_status getStatus() { return status; }
     int getResult();
@@ -70,6 +70,7 @@ class Simulation
     bool collisionChecked(vector< vector<human *> > checked_collisions, human *a, human *b);
     bool hitsWall(human *target, bool include_exit);
     bool isFrontHuman(human *h, vector<human *> collisions);
+    bool canSeeExit(human *h, dim2 exit);
     bool humanInBuilding(human *h);
     vector<human *> visibleHumans(human *h);
     float getPushChance(human *h);
@@ -116,6 +117,7 @@ class Simulation
     Uint8 vision_alpha; // The alpha channel value of the vision cone
     float chance_collision_fall;  // The chance that somebody will fall if they lose a push impact
     float trample_constant; // The amount of trample status added times radius (per ms)
+    float exit_distance_sufficient; // When a human is close enough to the exit to walk out of it
     Uint32 push_rate; // How many ms must be between each push from one person
     Uint32 standup_time;  // Time in ms after which a fallen person will stand up again
     rgb colour_healthy, colour_fallen, colour_dead,

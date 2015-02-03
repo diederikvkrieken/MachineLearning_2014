@@ -387,6 +387,8 @@ dim2 normalise(dim2 a)
 {
   dim2 result;
   float length = sqrt(a.x*a.x + a.y*a.y);
+  if(length < EPSILON) // Zero vector
+  { return makeDim2(0.0f, 0.0f); }
   result.x = a.x/length;
   result.y = a.y/length;
   return result;
@@ -396,6 +398,8 @@ dim3 normalise(dim3 a)
 {
   dim3 result;
   float length = sqrt(a.x*a.x + a.y*a.y + a.z*a.z);
+  if(length < EPSILON) // Zero vector
+  { return makeDim3(0.0f, 0.0f, 0.0f); }
   result.x = a.x/length;
   result.y = a.y/length;
   result.z = a.z/length;

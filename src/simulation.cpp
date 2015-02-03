@@ -33,6 +33,7 @@ void Simulation::init(Master *master_ptr, Machine *machine_ptr)
   chance_collision_fall = 0.5f;
   standup_time = 4000;
   trample_constant = 0.00001f;
+  exit_distance_sufficient = 30;
   push_rate = 2000;
   max_frames = 100000;
   frame_counter = 0;
@@ -109,6 +110,7 @@ void Simulation::fillBuilding()
       // Speed
       float speed = min_speed + (randInt(0, 100) / 100.0f) * (max_speed - min_speed);
       new_human.direction = new_human.direction * speed;
+      /*printDim2("initial speed", new_human.direction);*/
 
       float distance;
       collided = humanCollision(&new_human, &distance);
@@ -240,6 +242,11 @@ visible_information Simulation::applyPerception(human *h)
   { view.closest_wall_distance = 0.0f; }
   else
   { view.closest_wall_distance = (view.closest_wall_distance / (float)master->getResolution().x - 0.5f) * 2.0f; }
+
+  if(canSeeExit(h, exit_location))
+  { view.can_see_exit = 1.0f; }
+  else
+  { view.can_see_exit = -1.0f; }
 
   return view;
 }
@@ -879,6 +886,12 @@ bool Simulation::isFrontHuman(human *h, vector<human *> collisions)
   return true;
 }
 
+bool Simulation::canSeeExit(human *h, dim2 exit)
+{
+  float facing_angle = toDegrees(radiansPositiveOnly(computeAngle(h->direction, makeDim2(0.0f, 0.0f))));
+  return detectCollisionPointCone(exit, h->position, h->vision_range, h->fov, facing_angle);
+}
+
 bool Simulation::humanInBuilding(human *h)
 {
   vector<dim2> walls_vector = convertPixelToDim2(wall_vertices);
@@ -919,6 +932,15 @@ float Simulation::getPushChance(human *h)
 int Simulation::getNN()
 {
   return NeuralNetwork;
+}
+
+bool Simulation::closeEnoughToExit(human *h, dim2 exit)
+{
+  if(computeDistance(h->position, exit) < exit_distance_sufficient)
+  {
+    return true;
+  }
+  return false;
 }
 
 void Simulation::getAgeMeanVariance(vector<human *> humans, float *mean, float *variance)
@@ -1024,17 +1046,10 @@ vector<float> Simulation::createNNInputs(human *h, visible_information info)
   result.push_back(((h->height - min_height) / (max_height - min_height) - 0.5f) * 2.0f);
   result.push_back((h->panic - 0.5f) * 2.0f);
   result.push_back(((h->radius - min_radius) / (float)(max_radius - min_radius) - 0.5f) * 2.0f);
+  result.push_back(info.can_see_exit);
 
   return result;
 }
-
-/** Normalises the visible information based on mix and max values from the config file to the range [-1,1] **/
-/*visible_information Simulation::normaliseVision(visible_information info)
-{
-  info.n_people = ((info.n_people / (float)n_people) - 0.5f) * 2.0f;
-  info.mean_height = ((info.mean_height - min_height) / (max_height - min_height) - 0.5f) * 2.0f;
-  info.var_height = (info.var_height )
-}*/
 
 
 

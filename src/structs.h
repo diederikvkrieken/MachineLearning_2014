@@ -214,6 +214,7 @@ struct visible_information
   float n_walls;
   float closest_wall_distance;
   float exit_distance;
+  float can_see_exit;
 };
 
 struct human_action
