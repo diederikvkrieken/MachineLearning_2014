@@ -262,6 +262,7 @@ vector<float> NN::runHandAlgorithm(vector<float> input)
   float x_dir = input[3];
   float y_dir = input[4];
   float panic = input[6];
+  printf("x_dir = %.2f. y_dir = %.2f\n",x_dir, y_dir );
 
 
   vector <float> output;

@@ -1,5 +1,5 @@
 walls_file:CONT.sim
-load_save:
+load_save:e25p5.save
 single_cone:1
 n_people:100
 min_radius:4
