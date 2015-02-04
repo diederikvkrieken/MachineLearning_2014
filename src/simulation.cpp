@@ -358,8 +358,9 @@ void Simulation::handleInput(int frame_time, input inputs)
      inputs.key == SDL_SCANCODE_S)  // CTRL + S
   {
     // Save the state
-    printf("saving\n");
-    machine->saveState();
+    printf("Saving\n");
+    // Quit after simulation ends to prevent non-saved results from being exported
+    machine->saveState(true);
   }
 }
 

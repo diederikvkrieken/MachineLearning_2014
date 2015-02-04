@@ -7,11 +7,11 @@ void NN::initializeNN()
   n_hidden = 50;
   n_output = 3;
   nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
-  input_text = "experiment_small-square_1000epoch_25part_10range_0.2speed_50hidden_100people_5000frames.csv";
+  input_text = "temp.csv";
 
   /** Parameters of the particle swarm **/
   //youtube video gives optimal range 20-40
-  maxEpoch = 1000; // was 1000
+  maxEpoch = 2000; // was 1000
   nParticles = 25; //was 20
   /** x_max x_min v_max v_min **/
   x_max = 10.0f;
@@ -104,6 +104,7 @@ void NN::trainNN(vector <int> result)
     results << "\n";
     results.close();
   }
+
   //Check for best error result
   for(int i=0; i < nParticles; i++)
   {

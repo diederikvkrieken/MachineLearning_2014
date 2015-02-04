@@ -11,15 +11,20 @@ void Machine::init(Master *master_ptr)
   network.initializeNN();
 
   current_particle = 0;
+  repeat_particle = -1;
   current_epoch = 0;
+  quit_next_loop = false;
+  train_on_epochs = true;
 }
 
 bool Machine::run(int frame_time, input inputs)
 {
   int NN = simulation.getNN();
+  if(repeat_particle > -1)
+  { current_particle = repeat_particle; }
+
   if(simulation.getStatus() == IDLE)
   {
-    printf("idling\n");
     // Simulation is waiting to start
     // Construct the appropriate network
     if(NN == 1)
@@ -31,31 +36,40 @@ bool Machine::run(int frame_time, input inputs)
   }
   if(simulation.getStatus() == STOPPED)
   {
-    printf("stopped\n");
+    printf("Stopped simulation\n");
+
+    if(quit_next_loop)
+    { return false; }
+
     // Get and store the result
     int result_time = simulation.getResult();
     time_results.push_back(result_time);
-    current_particle++;
+
+    if(repeat_particle == -1)
+    { current_particle++; }
     if(current_particle >= network.nParticles)
     {
-      // Train the networks after simulation ends, particle optimisation
       /*printf("epoch++\n");
       for(unsigned int i=0; i < time_results.size(); i++)
       {
         printf("time %d: %d\n", i, time_results[i]);
       }*/
-      if(NN == 1)
-      { network.trainNN(time_results); }
-      time_results.clear();
       current_particle = 0;
-      current_epoch++;
+      if(train_on_epochs)
+      {
+        current_epoch++;
+        // Train the networks after simulation ends, particle optimisation
+        if(NN == 1)
+        { network.trainNN(time_results); }
+      }
+      time_results.clear();
     }
     if(current_epoch >= network.maxEpoch)
     {
-      saveState();
-      /** TODO: continue running same network when done **/
-      printf("quitting\n");
-      return false;
+      // Save results automatically when at the end of the experiment
+      saveState(false);
+      train_on_epochs = false;
+      current_epoch--;
     }
     printf("\tEpoch:\t\t%d.\n\tParticle:\t%d.\n", current_epoch, current_particle);
     simulation.setStatus(IDLE);
@@ -66,8 +80,13 @@ bool Machine::run(int frame_time, input inputs)
   return true;  // Keep running
 }
 
-void Machine::saveState()
+void Machine::saveState(bool quit)
 {
+  if(quit)
+  { quit_next_loop = true; }
+  else
+  { quit_next_loop = false; }
+
   ofstream file;
   stringstream output, file_name;
 
