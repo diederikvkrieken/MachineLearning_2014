@@ -3,21 +3,21 @@
 void NN::initializeNN()
 {
   n_layers = 1;
-  n_input = 22;
+  n_input = 25;
   n_hidden = 50;
   n_output = 3;
   nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
-  input_text = "result_100pp_cont_25particles_200_epoch_50_n_hidden.csv";
+  input_text = "temp.csv";
 
   /** Parameters of the particle swarm **/
   //youtube video gives optimal range 20-40
-  maxEpoch = 200; // was 1000
+  maxEpoch = 2000; // was 1000
   nParticles = 25; //was 20
   /** x_max x_min v_max v_min **/
-  x_max = 1.0f;
-  x_min = -1.0f;
-  v_max = 0.1f;
-  v_min = -0.1f;
+  x_max = 10.0f;
+  x_min = -10.0f;
+  v_max = 0.2f;
+  v_min = -0.2f;
   precision = 0.001f; // Precision for randomFloat function
   c1 = 1.4f;
   c2 = 1.4f;
@@ -104,6 +104,7 @@ void NN::trainNN(vector <int> result)
     results << "\n";
     results.close();
   }
+
   //Check for best error result
   for(int i=0; i < nParticles; i++)
   {

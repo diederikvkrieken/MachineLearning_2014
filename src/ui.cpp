@@ -66,11 +66,11 @@ void UI::readConfigFile(string path)
   {
     // Split the name variable from rest of the line
     vector<string> words = splitString(line, ':');
-    for(unsigned int i=0; i < words.size(); i++)
+    /*for(unsigned int i=0; i < words.size(); i++)
     {
       printf("word[%d]: %s\n", i, words[i].c_str());
     }
-    printf("--------------\n");
+    printf("--------------\n");*/
     parseParameter(words);
   }
   file.close();
@@ -78,7 +78,7 @@ void UI::readConfigFile(string path)
 
 void UI::readWalls(string path)
 {
-  printf("start loading walls\n");
+  printf("Loading walls: %s\n", path.c_str());
   ifstream file;
   string line;
   vector<pixel> vertices;
@@ -107,7 +107,6 @@ void UI::readWalls(string path)
   file.close();
 
   simulation->setWalls(vertices);
-  printf("stopped loading walls\n");
 }
 
 void UI::exportWalls(string path)
@@ -162,6 +161,11 @@ void UI::parseParameter(vector<string> words)
   { simulation->setMaxFrames(atoi(words[1].c_str())); }
   if(words[0] == "neural_network")
   { simulation->setNN(atoi(words[1].c_str())); }
+  if(words[0] == "repeat_particle")
+  {
+    if(!(words.size() == 1 || words[1] == "" || words[1] == " " || words[1] == "\n"))
+    { machine->setRepeatParticle(atoi(words[1].c_str())); }
+  }
   if(words[0] == "walls_file")
   {
     if(words.size() == 1 || words[1] == "" || words[1] == " " || words[1] == "\n")
@@ -267,14 +271,14 @@ void UI::handleWallStoring(input *inputs)
   handleTextInput(&finished, inputs);
   if(finished || clickedOnButton(save_button, inputs))
   {
-    printf("save button clicked\n");
+    printf("Save button clicked\n");
     exportWalls("config/walls/" + input_text);
     input_text = "";
     simulation->setStatus(SPAWNING);
   }
   else if(clickedOnButton(ignore_button, inputs))
   {
-    printf("ignore button clicked\n");
+    printf("Ignore button clicked\n");
     // Don't save walls
     input_text = "";
     simulation->setStatus(SPAWNING);

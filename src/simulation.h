@@ -36,7 +36,9 @@ class Simulation
     void setNN(int a) { NeuralNetwork = a; }
     int getNN();
 
-
+    bool closeEnoughToExit(human *h, dim2 exit);
+    dim2 getWallParallel(human *h);
+    human_action runHandAlgorithm(vector<float> input, human *h);
     visible_information applyPerception(human *h);
     simulation_status getStatus() { return status; }
     int getResult();
@@ -48,10 +50,10 @@ class Simulation
     void calculateTotalTime();
     void handleInput(int frame_time, input inputs);
     void updateActions();
-    void moveHumans(int frame_time);
+    void moveHumans();
     void updateFallen();
     void push(human *a, human *b);
-    void trample(int frame_time, human *fallen, human *treading, float overlap);
+    void trample(human *fallen, human *treading, float overlap);
     void createWalls(input *inputs);
     void updateWallSurface();
     void fillWallBackground();
@@ -70,6 +72,7 @@ class Simulation
     bool collisionChecked(vector< vector<human *> > checked_collisions, human *a, human *b);
     bool hitsWall(human *target, bool include_exit);
     bool isFrontHuman(human *h, vector<human *> collisions);
+    bool canSeeExit(human *h, dim2 exit);
     bool humanInBuilding(human *h);
     vector<human *> visibleHumans(human *h);
     float getPushChance(human *h);
@@ -78,6 +81,7 @@ class Simulation
     void getHeightMeanVariance(vector<human *> humans, float *mean, float *variance);
     void getPanicMeanVariance(vector<human *> humans, float *mean, float *variance);
     void getDirectionMeanVariance(vector<human *> humans, dim2 *mean, dim2 *variance);
+    void getRelativePositionMean(vector<human *> humans, dim2 position, dim2 *mean);
     dim2 determineExit();
     vector<float> createNNInputs(human *h, visible_information info);
 
@@ -93,8 +97,7 @@ class Simulation
     map<simulation_status, string> status_text;
 
     simulation_status status; // Run status of the simulation
-    Uint32 total_escape_time,
-           start_time;
+    Uint32 total_escape_frames;
     int max_frames, // Simulation is allowed to run for this many frames before quitting
         frame_counter,
         frames_since_action,  // The amount of frames since the network was last consulted
@@ -108,16 +111,18 @@ class Simulation
     int min_radius, max_radius; // The minimum/maximum radius of a person, anything < 5 makes the circle odd shaped
     int min_age, max_age;
     int min_height, max_height;
-    float min_speed, max_speed; // Speed of people, in pixels/ms
+    float min_speed, max_speed; // Speed of people, in pixels/frame
     float min_vision, max_vision,
           default_vision_range;
     float default_fov;  // The default field of view of a person, in degrees
     float default_panic;
     Uint8 vision_alpha; // The alpha channel value of the vision cone
     float chance_collision_fall;  // The chance that somebody will fall if they lose a push impact
-    float trample_constant; // The amount of trample status added times radius (per ms)
-    Uint32 push_rate; // How many ms must be between each push from one person
-    Uint32 standup_time;  // Time in ms after which a fallen person will stand up again
+    float trample_constant; // The amount of trample status added times radius (per frame)
+    float exit_distance_sufficient; // When a human is close enough to the exit to walk out of it
+    float wall_follow_distance; // The minimum distance when a wall-following should occur
+    Uint32 push_rate; // How many frames must be between each push from one person
+    Uint32 standup_frames;  // Time in frames after which a fallen person will stand up again
     rgb colour_healthy, colour_fallen, colour_dead,
         vision_colour,
         wall_colour, exit_colour, inside_bg_colour;
