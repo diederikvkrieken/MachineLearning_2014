@@ -22,6 +22,7 @@ class Machine
     NN *getNetwork() { return &network; }
     Simulation *getSimulation() { return &simulation; }
     SDL_Surface *getScreen() { return simulation.getScreen(); }
+    void saveResults(vector<int> result);
   private:
     int current_particle,
         repeat_particle,  // Which particle should be repeated for visualization, -1 if not applicable
