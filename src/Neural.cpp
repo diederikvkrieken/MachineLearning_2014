@@ -4,14 +4,14 @@ void NN::initializeNN()
 {
   n_layers = 1;
   n_input = 25;
-  n_hidden = 50;
+  n_hidden = 5;
   n_output = 3;
   nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
-  input_text = "experiment_med-square_1000epoch_25part_10range_0.2speed_50hidden_100people_6000frames.csv";
+  input_text = "experiment_medium-square_handmatig_100_klein.csv";
 
   /** Parameters of the particle swarm **/
   //youtube video gives optimal range 20-40
-  maxEpoch = 1000; // was 1000
+  maxEpoch = 2; // was 1000
   nParticles = 25; //was 20
   /** x_max x_min v_max v_min **/
   x_max = 10.0f;
@@ -92,18 +92,6 @@ void NN::initializeNN()
 
 void NN::trainNN(vector <int> result)
 {
-  // write results
-  ofstream results;
-  results.open(input_text.c_str(), std::ios::app);
-  if (results.is_open())
-  {
-    for(unsigned int i=0; i < result.size(); i++)
-    {
-      results << result[i] << "; ";
-    }
-    results << "\n";
-    results.close();
-  }
 
   //Check for best error result
   for(int i=0; i < nParticles; i++)

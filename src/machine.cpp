@@ -58,6 +58,7 @@ bool Machine::run(int frame_time, input inputs)
       if(train_on_epochs)
       {
         current_epoch++;
+        saveResults(time_results);
         // Train the networks after simulation ends, particle optimisation
         if(NN == 1)
         { network.trainNN(time_results); }
@@ -228,8 +229,20 @@ human_action Machine::queryNetwork(vector<float> nn_inputs)
   return action;
 }
 
-
-
+void Machine::saveResults(vector <int> result){
+// write results
+  ofstream results;
+  results.open(network.input_text.c_str(), std::ios::app);
+  if (results.is_open())
+  {
+    for(unsigned int i=0; i < result.size(); i++)
+    {
+      results << result[i] << "; ";
+    }
+    results << "\n";
+    results.close();
+  }
+}
 
 
 
