@@ -28,3 +28,4 @@ gmon.out
 panic_simulation.cbp
 *.cscope_file_list
 *.save
+temp.csv
