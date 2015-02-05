@@ -1,5 +1,5 @@
-walls_file:cont.sim
-load_save:e428p14.save
+walls_file:medium_square.w
+load_save:
 single_cone:1
 n_people:100
 min_radius:4
@@ -12,6 +12,6 @@ min_height:40
 max_height:205
 min_age:2
 max_age:98
-max_simulation_frames:5000
+max_simulation_frames:6000
 neural_network:1
 repeat_particle:
