@@ -11,7 +11,6 @@ class NN
     void initializeNN();
     void trainNN(vector <int> result);
     void positionToWeights(int particle);
-//    void wegschrijvenParticles(string text_name);
     float activationFunction(float input ,float bias);
     vector<float> runNN(vector<float> input);
 

@@ -506,7 +506,6 @@ void Simulation::updateFallen()
 
 void Simulation::push(human *a, human *b)
 {
-  /** TODO: add speed factor **/
   float a_score, b_score; // The human with the highest score wins
   float a_advantage, b_advantage; // Which human has advantage related to position and direction
   float height_weight, radius_weight, panic_weight, direction_weight;
@@ -558,10 +557,11 @@ void Simulation::trample(human *fallen, human *treading, float overlap)
 {
   // Trampling goes faster if the two humans overlap more
   // weight is between [0,1]
-  float overlap_weight = overlap / (float)(fallen->radius + treading->radius);
+  /*float overlap_weight = overlap / (float)(fallen->radius + treading->radius);*/
+  float overlap_weight = 1.0f;
   /** [overlap_weight] is disabled **/
 
-  fallen->trample_status += treading->radius * trample_constant/* * overlap_weight*/;
+  fallen->trample_status += treading->radius * trample_constant * overlap_weight;
   if(fallen->trample_status >= 1.0f)
   {
     fallen->status = DEAD;
