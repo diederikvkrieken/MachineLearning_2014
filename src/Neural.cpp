@@ -7,7 +7,7 @@ void NN::initializeNN()
   n_hidden = 5;
   n_output = 3;
   nW = (n_input*n_hidden) + (n_output*n_hidden) + n_hidden + n_output;
-  input_text = "experiment_medium-square_handmatig_100_klein.csv";
+  input_text = "final.csv";
 
   /** Parameters of the particle swarm **/
   //youtube video gives optimal range 20-40
