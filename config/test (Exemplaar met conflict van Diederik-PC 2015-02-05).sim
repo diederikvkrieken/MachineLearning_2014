@@ -13,5 +13,5 @@ max_height:205
 min_age:2
 max_age:98
 max_simulation_frames:6000
-neural_network:0
+neural_network:1
 repeat_particle:
